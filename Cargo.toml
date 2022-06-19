@@ -8,7 +8,5 @@ edition = "2021"
 [dependencies]
 chrono = { version = "0.4", features = ["serde"]}
 serde = { version = "1", features = ["derive"] }
-
-jpx_mbo_itch_datatypes = { git = "https://github.com/thomas-k-cameron/jpx_mbo_itch_datatypes" }
 datafusion = "9.0.0"
 
