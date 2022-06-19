@@ -1,5 +1,5 @@
 [package]
-name = "jpx_mbo_orderbook"
+name = "jpx_mbo"
 version = "0.1.0"
 edition = "2021"
 
