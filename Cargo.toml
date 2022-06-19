@@ -1,0 +1,14 @@
+[package]
+name = "jpx_mbo_orderbook"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"]}
+serde = { version = "1", features = ["derive"] }
+
+jpx_mbo_itch_datatypes = { git = "https://github.com/thomas-k-cameron/jpx_mbo_itch_datatypes" }
+datafusion = "9.0.0"
+
