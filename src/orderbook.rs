@@ -1,6 +1,8 @@
-use crate::{CombinationProduct, DeleteOrder, Executed, ExecutionWithPriceInfo, ProductInfo, PutOrder, Side, TickSize};
-use std::{collections::{BTreeMap, HashMap}};
-
+use crate::{
+    CombinationProduct, DeleteOrder, Executed, ExecutionWithPriceInfo, ProductInfo, PutOrder, Side,
+    TickSize,
+};
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug)]
 pub struct OrderBook {
@@ -82,7 +84,6 @@ impl OrderBook {
         a
     }
 
-
     /// inserts new order onto orderbook
     pub fn put(&mut self, a: PutOrder) {
         let tree = match a.side {
@@ -107,7 +108,7 @@ impl OrderBook {
             });
     }
 
-    /// Handles E message: 
+    /// Handles E message:
     /// Reduces the quantity of an order which is executed against.
     pub fn executed(&mut self, e: &Executed) -> PutOrder {
         let tree = match e.side {
@@ -197,4 +198,3 @@ impl OrderBook {
         opts.unwrap()
     }
 }
-
