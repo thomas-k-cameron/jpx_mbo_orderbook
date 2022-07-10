@@ -2,11 +2,20 @@ use crate::{
     CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, LegPrice,
     ProductInfo, PutOrder, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
 };
+use std::any::{Any, TypeId};
 
 macro_rules! dclr_message_enum {
     ($($ident:ident,)*) => {
         pub enum MessageEnum {
             $( $ident($ident), )*
+        }
+
+        impl MessageEnum {
+            pub fn tag(&self) -> char {
+                match self {
+                    $( MessageEnum::$ident(_) => $ident::TAG, )*
+                }
+            }
         }
 
         $(
@@ -24,6 +33,16 @@ macro_rules! dclr_message_enum {
 }
 
 dclr_message_enum!(
-    CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, LegPrice,
-    ProductInfo, PutOrder, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
+    CombinationProduct,
+    DeleteOrder,
+    EquilibriumPrice,
+    Executed,
+    ExecutionWithPriceInfo,
+    LegPrice,
+    ProductInfo,
+    PutOrder,
+    SecondTag,
+    SystemEventInfo,
+    TickSize,
+    TradingStatusInfo,
 );
