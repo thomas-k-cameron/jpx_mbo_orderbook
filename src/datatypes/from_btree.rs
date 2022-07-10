@@ -184,7 +184,7 @@ macro_rules! impl_message {
                             } else {
                                 let err = FromRecordBatchError{
                                     kind: FromRecordBatchErrorKind::Downcast,
-                                    name: i.name()
+                                    name:  "timestamp"
                                 };
                                 err_stack.push(err)
                             };
@@ -199,15 +199,15 @@ macro_rules! impl_message {
                                 } else {
                                     let err = FromRecordBatchError{
                                         kind: FromRecordBatchErrorKind::Downcast,
-                                        name: i.name().to_string()
+                                        name: stringify!($field)
                                     };
                                     err_stack.push(err)
                                 };
                             }
                         ) *
                         _ => err_stack.push(FromRecordBatchError{
-                            kind: FromRecordBatchErrorKind::ColumnNotFound,
-                            name: i.name().to_string()
+                            kind: FromRecordBatchErrorKind::ColumnNotFound(i.name().to_string()),
+                            name: ""
                         })
                     };
                 }
@@ -281,7 +281,7 @@ pub struct FromRecordBatchError {
 pub enum FromRecordBatchErrorKind {
     ValidationError,
     Downcast,
-    ColumnNotFound,
+    ColumnNotFound(String),
     TypeConversionFailed
 }
 
