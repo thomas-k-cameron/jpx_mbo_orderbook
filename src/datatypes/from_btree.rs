@@ -222,7 +222,7 @@ macro_rules! impl_message {
 }
 
 pub trait FromRecordBatch: Sized {
-    fn from_record_batch(list: &RecordBatch) -> Result<Vec<Self>, Vec<FromRecordBatchError>>;
+    fn from_record_batch(record_batch: &RecordBatch) -> Result<Vec<Self>, Vec<FromRecordBatchError>>;
 }
 pub struct FromRecordBatchError {
     pub kind: FromRecordBatchErrorKind,
