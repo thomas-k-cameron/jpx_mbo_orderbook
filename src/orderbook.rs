@@ -1,6 +1,7 @@
 use crate::{CombinationProduct, DeleteOrder, Executed, ExecutionWithPriceInfo, ProductInfo, PutOrder, Side, TickSize};
 use std::{collections::{BTreeMap, HashMap}};
 
+
 #[derive(Debug)]
 pub struct OrderBook {
     ///
@@ -14,7 +15,9 @@ pub struct OrderBook {
     /// Orders with same id could exists on the other side of the orderbook.
     /// index to map orders
     pub orders: HashMap<(u64, Side), i64>, // id => price
+    /// key is the price, embeded map's key is the order id of the value's put order
     pub ask: BTreeMap<i64, BTreeMap<u64, PutOrder>>,
+    /// key is the price, embeded map's key is the order id of the value's put order
     pub bid: BTreeMap<i64, BTreeMap<u64, PutOrder>>,
 }
 
