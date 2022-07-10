@@ -119,10 +119,59 @@ macro_rules! impl_message {
     };
     (FromRecordBatch @ $name:ident $( $field:ident $dt:ty ) *) => {
         impl FromRecordBatch for $name {
+            /// just validation. no detailed error reporting
+            fn validate(rb: &RecordBatch) -> bool {
+                $( 
+                    let mut $field = usize::MAX;
+                ) *
+                for (idx, i) in rb.schema().fields().iter().enumerate() {
+                    match i.name().as_str() {
+                        $( 
+                            stringify!($field) => $field = idx,
+                        ) *
+                        _ => ()
+                    };
+                }
+                
+                $( 
+                    if $field != usize::MAX {
+                        return false
+                    }
+                ) *
+                true
+            }
             fn from_record_batch(rb: &RecordBatch) -> Result<Vec<$name>, Vec<FromRecordBatchError>> {
                 let mut err_stack = vec![];
                 $( let mut $field: Option<&<$dt as IntoField>::ArrayType> = None; )*
                 let mut timestamp = None;
+                // validate
+                {
+                    $( 
+                        let mut $field = usize::MAX;
+                    ) *
+                    for (idx, i) in rb.schema().fields().iter().enumerate() {
+                        match i.name().as_str() {
+                            $( 
+                                stringify!($field) => $field = idx,
+                            ) *
+                            _ => ()
+                        };
+                    }
+                    
+                    $( 
+                        if $field != usize::MAX {
+                            err_stack.push(
+                                FromRecordBatchError {
+                                    kind: FromRecordBatchErrorKind::ValidationError,
+                                    name: stringify!($field)
+                                }
+                            )
+                        }
+                    ) *
+                    if err_stack.len() > 0 {
+                        return Err(err_stack)
+                    }
+                };
                 // get record batch for each field
                 for (idx, i) in rb.schema().fields().iter().enumerate() {
                     match i.name().as_str() {
@@ -135,7 +184,7 @@ macro_rules! impl_message {
                             } else {
                                 let err = FromRecordBatchError{
                                     kind: FromRecordBatchErrorKind::Downcast,
-                                    name: i.name().to_string()
+                                    name: i.name()
                                 };
                                 err_stack.push(err)
                             };
@@ -186,7 +235,7 @@ macro_rules! impl_message {
                                 } else {
                                     err_stack.push(
                                         FromRecordBatchError {
-                                            name: stringify!($field).to_string(),
+                                            name: stringify!($field),
                                             kind: FromRecordBatchErrorKind::TypeConversionFailed
                                         }
                                     );
@@ -222,13 +271,15 @@ macro_rules! impl_message {
 }
 
 pub trait FromRecordBatch: Sized {
+    fn validate(record_batch: &RecordBatch) -> bool;
     fn from_record_batch(record_batch: &RecordBatch) -> Result<Vec<Self>, Vec<FromRecordBatchError>>;
 }
 pub struct FromRecordBatchError {
     pub kind: FromRecordBatchErrorKind,
-    pub name: String,
+    pub name: &'static str,
 }
 pub enum FromRecordBatchErrorKind {
+    ValidationError,
     Downcast,
     ColumnNotFound,
     TypeConversionFailed
