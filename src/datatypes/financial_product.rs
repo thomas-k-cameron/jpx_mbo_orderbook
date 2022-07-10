@@ -19,3 +19,15 @@ impl FromStr for FinancialProduct {
         })
     }
 }
+
+impl TryFrom<i8> for FinancialProduct {
+    type Error = ();
+    fn try_from(int: i8) -> Result<Self, Self::Error> {
+        Ok(match int {
+                    1 => FinancialProduct::Option,
+                    3 => FinancialProduct::Future,
+                    11 => FinancialProduct::Combo,
+                    _ => return Err(())
+                })
+    }
+}

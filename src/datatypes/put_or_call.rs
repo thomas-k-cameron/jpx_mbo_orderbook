@@ -19,3 +19,15 @@ impl FromStr for PutOrCall {
         })
     }
 }
+
+impl TryFrom<i8> for PutOrCall {
+    type Error = ();
+    fn try_from(int: i8) -> Result<Self, Self::Error> {
+        match int {
+            1 => Ok(PutOrCall::Call),
+            2 => Ok(PutOrCall::Put),
+            0 => Ok(PutOrCall::Combo),
+            _ => Err(()),
+        }
+    }
+}
