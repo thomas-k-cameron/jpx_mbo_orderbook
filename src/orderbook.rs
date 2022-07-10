@@ -1,6 +1,6 @@
 use crate::{
     CombinationProduct, DeleteOrder, Executed, ExecutionWithPriceInfo, ProductInfo, PutOrder, Side,
-    TickSize,
+    TickSize, EquilibriumPrice, TradingStatusInfo,
 };
 use std::collections::{BTreeMap, HashMap};
 
@@ -21,6 +21,9 @@ pub struct OrderBook {
     pub ask: BTreeMap<i64, BTreeMap<u64, PutOrder>>,
     /// key is the price, embeded map's key is the order id of the value's put order
     pub bid: BTreeMap<i64, BTreeMap<u64, PutOrder>>,
+
+    pub equibrium_price: Option<EquilibriumPrice>,
+    pub trading_status: Option<String>
 }
 
 pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, PutOrder>>;
@@ -35,6 +38,8 @@ impl OrderBook {
             orders: HashMap::new(),
             ask: BTreeMap::new(),
             bid: BTreeMap::new(),
+            equibrium_price: None,
+            trading_status: None
         }
     }
 
@@ -153,10 +158,14 @@ impl OrderBook {
     }
 
     /// Handles C message:   
+    /// 
     /// Reduces the quantity of an order which is executed.  
+    /// 
     /// returns the putorder of which it was affected.   
+    /// 
     /// The put order is cloned and the same order may remain on the orderbook.
-    pub fn c_executed(&mut self, c: &ExecutionWithPriceInfo) -> PutOrder {
+    /// 
+    pub fn c_executed(&mut self, c: &ExecutionWithPriceInfo) {
         let tree = match c.side {
             Side::Sell => &mut self.ask,
             Side::Buy => &mut self.bid,
@@ -176,11 +185,9 @@ impl OrderBook {
             unreachable!("{}", func_e())
         };
 
-        let mut opts = None;
         let check = if let Some(a) = level.get_mut(&c.order_id) {
             a.quantity -= c.executed_quantity;
             assert!(a.quantity >= 0);
-            opts.replace(a.clone());
             a.quantity == 0
         } else {
             unreachable!("{}", func_e())
@@ -194,7 +201,13 @@ impl OrderBook {
         if level.len() == 0 {
             tree.remove(&price);
         }
+    }
 
-        opts.unwrap()
+    pub fn set_last_equilibrium_price(&mut self, z: EquilibriumPrice) {
+        self.equibrium_price.replace(z);
+    }
+
+    pub fn set_trading_status(&mut self, s: &TradingStatusInfo) {
+        self.trading_status.replace(s.state_name.clone());
     }
 }
