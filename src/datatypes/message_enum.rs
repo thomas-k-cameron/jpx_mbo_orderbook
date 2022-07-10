@@ -2,7 +2,6 @@ use crate::{
     CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, LegPrice,
     ProductInfo, PutOrder, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
 };
-use std::any::{Any, TypeId};
 
 macro_rules! dclr_message_enum {
     ($($ident:ident,)*) => {
