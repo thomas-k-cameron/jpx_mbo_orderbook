@@ -1,7 +1,15 @@
 // automatically generated
 #[macro_use]
 pub(crate) mod from_btree;
-pub(crate) use from_btree::{into_field};
+pub(crate) use from_btree::into_field;
+pub mod from_record_batch {
+    pub use crate::from_btree::{
+        FromRecordBatch,
+        FromRecordBatchErrorKind,
+        FromRecordBatchError
+    };
+}
+
 
 
 mod into_array_ref;
