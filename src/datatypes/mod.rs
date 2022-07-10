@@ -1,7 +1,8 @@
 // automatically generated
 #[macro_use]
 pub(crate) mod from_btree;
-pub(crate) use from_btree::into_field;
+pub(crate) use from_btree::{into_field};
+
 
 mod into_array_ref;
 pub(crate) use into_array_ref::IntoArrayRef;
@@ -38,7 +39,7 @@ mod z;
 pub use z::EquilibriumPrice;
 
 mod message_enum;
-
+pub use message_enum::MessageEnum;
 
 mod financial_product;
 pub use financial_product::FinancialProduct;
