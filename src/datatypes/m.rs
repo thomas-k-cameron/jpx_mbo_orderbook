@@ -23,6 +23,7 @@ use std::str::FromStr;
 ///オンライン開始後、一定時間経過後に提供する。
 ///
 ///テーラーメイドコンビネーション(TMC)が組成されたときに提供する。
+/// 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct CombinationProduct {
     pub timestamp: NaiveDateTime,
