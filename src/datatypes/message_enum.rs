@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 use crate::{
     CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, LegPrice,
     ProductInfo, PutOrder, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
