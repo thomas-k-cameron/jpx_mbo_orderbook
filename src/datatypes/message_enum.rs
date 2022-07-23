@@ -5,10 +5,13 @@ use crate::{
 };
 use crate::from_record_batch::*;
 use chrono::NaiveDateTime;
+use datafusion::arrow::error::ArrowError;
 use datafusion::arrow::record_batch::RecordBatch;
+use serde::{Serialize, Deserialize};
 
 macro_rules! dclr_message_enum {
     ($($ident:ident,)*) => {
+        #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
         pub enum MessageEnum {
             $( $ident($ident), )*
         }
@@ -79,3 +82,17 @@ dclr_message_enum!(
     TickSize,
     TradingStatusInfo,
 );
+
+impl MessageEnum {
+    /// create json from record batches then 
+    pub fn from_record_batches(batches: &[RecordBatch]) -> Result<Vec<MessageEnum>, ArrowError> {
+        let list = datafusion::arrow::json::writer::record_batches_to_json_rows(batches)?
+            .into_iter()
+            .map(|val| serde_json::from_value(serde_json::Value::Object(val)))
+            .take_while(|val| val.is_ok())
+            .map(|val|  val.unwrap())
+            .collect();
+    
+        Ok(list)
+    }    
+}
