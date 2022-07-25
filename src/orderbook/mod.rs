@@ -1,4 +1,5 @@
 mod orderbook;
 pub use orderbook::{OrderBook, PriceLevel};
 
-pub mod runtime;
+mod runtime;
+pub use runtime::{order_book_runtime, OrderBookRunTimeCallback};

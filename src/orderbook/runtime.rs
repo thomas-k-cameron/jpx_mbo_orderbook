@@ -4,17 +4,21 @@ use chrono::NaiveDateTime;
 
 use crate::{datatypes::*, OrderBook};
 
-pub trait Analysis {
+pub trait OrderBookRunTimeCallback {
     /// executes 
-    fn pre_message(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, msg: &MessageEnum);
-    fn after_message(&mut self, order_book_map: &mut HashMap<u64, OrderBook>);
-    fn timeframe_start(&mut self,  order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime, stack: &[MessageEnum]);
-    fn timeframe_end(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime);
+    #[inline]
+    fn pre_message(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, msg: &MessageEnum) {}
+    #[inline]
+    fn after_message(&mut self, order_book_map: &mut HashMap<u64, OrderBook>) {}
+    #[inline]
+    fn timeframe_start(&mut self,  order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime, stack: &[MessageEnum]) {}
+    #[inline]
+    fn timeframe_end(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime) {}
 }
 
 pub async fn order_book_runtime<A>(order_book_map: &mut HashMap<u64, OrderBook>, key_as_timestamp: BTreeMap<NaiveDateTime, Vec<MessageEnum>>, analysis: &mut A) 
     where
-        A: Analysis
+        A: OrderBookRunTimeCallback
 {
     fn err_msg(order_book_id: u64, message: impl Debug) -> String {
         format!(
