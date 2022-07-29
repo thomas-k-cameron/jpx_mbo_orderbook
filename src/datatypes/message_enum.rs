@@ -12,6 +12,7 @@ use serde::{Serialize, Deserialize};
 macro_rules! dclr_message_enum {
     ($($ident:ident,)*) => {
         #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+        #[serde(tag = "tag")]
         pub enum MessageEnum {
             $( $ident($ident), )*
         }
@@ -88,9 +89,7 @@ impl MessageEnum {
     pub fn from_record_batches(batches: &[RecordBatch]) -> Result<Vec<MessageEnum>, ArrowError> {
         let list = datafusion::arrow::json::writer::record_batches_to_json_rows(batches)?
             .into_iter()
-            .map(|val| serde_json::from_value(serde_json::Value::Object(val)))
-            .take_while(|val| val.is_ok())
-            .map(|val|  val.unwrap())
+            .filter_map(|val| serde_json::from_value(serde_json::Value::Object(val)).ok())
             .collect();
     
         Ok(list)
