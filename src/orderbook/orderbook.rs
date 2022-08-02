@@ -1,6 +1,6 @@
 use crate::{
     CombinationProduct, DeleteOrder, Executed, ExecutionWithPriceInfo, ProductInfo, PutOrder, Side,
-    TickSize, EquilibriumPrice, TradingStatusInfo,
+    TickSize, EquilibriumPrice, TradingStatusInfo, LegPrice,
 };
 use std::collections::{BTreeMap, HashMap};
 
