@@ -32,10 +32,10 @@ pub trait OrderBookRunTimeCallback {
     }
 }
 
-pub async fn order_book_runtime<A>(
+pub fn order_book_runtime<A>(
     order_book_map: &mut HashMap<u64, OrderBook>,
     key_as_timestamp: BTreeMap<NaiveDateTime, Vec<MessageEnum>>,
-    analysis: &mut A,
+    callback: &mut A,
 ) where
     A: OrderBookRunTimeCallback,
 {
@@ -47,10 +47,10 @@ pub async fn order_book_runtime<A>(
     }
 
     for (timestamp, stack) in key_as_timestamp {
-        analysis.timeframe_start(order_book_map, &timestamp, &stack[..]);
+        callback.timeframe_start(order_book_map, &timestamp, &stack[..]);
         // pre processing
         for msg in stack {
-            analysis.pre_message(order_book_map, &msg);
+            callback.pre_message(order_book_map, &msg);
             match msg {
                 MessageEnum::SecondTag(_msg) => {
                     // do nothing
@@ -118,10 +118,10 @@ pub async fn order_book_runtime<A>(
                     //
                 }
             };
-            analysis.after_message(order_book_map);
+            callback.after_message(order_book_map);
         }
         // post processing
-        analysis.timeframe_end(order_book_map, &timestamp);
+        callback.timeframe_end(order_book_map, &timestamp);
     }
 }
 
