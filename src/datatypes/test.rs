@@ -1,6 +1,6 @@
 use crate::{
     CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, LegPrice,
-    ProductInfo, PutOrder, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
+    MessageEnum, ProductInfo, PutOrder, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
 };
 
 #[test]
@@ -13,7 +13,11 @@ fn parse_put_order() {
     for i in list {
         let item = PutOrder::try_from(i);
         println!("{:?}", item);
-        assert!(item.is_ok())
+        assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'A');
     }
 }
 
@@ -30,6 +34,10 @@ fn parse_delete_order() {
         let item = DeleteOrder::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'D');
     }
 }
 
@@ -45,6 +53,10 @@ fn parse_combination_order() {
         let item = ExecutionWithPriceInfo::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'C');
     }
 }
 
@@ -65,6 +77,10 @@ fn parse_executed() {
         let item = Executed::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'E');
     }
 }
 
@@ -83,6 +99,10 @@ fn parse_tick_size() {
         let item = TickSize::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'L');
     }
 }
 
@@ -111,6 +131,10 @@ fn parse_trading_status_info() {
         let item = TradingStatusInfo::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'O');
     }
 }
 
@@ -142,6 +166,10 @@ fn parse_product_info() {
         let item = ProductInfo::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'R');
     }
 }
 
@@ -156,6 +184,10 @@ fn parse_system_event_info() {
         let item = SystemEventInfo::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'S');
     }
 }
 
@@ -176,6 +208,10 @@ fn parse_time() {
         let item = SecondTag::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'T');
     }
 }
 
@@ -202,5 +238,9 @@ fn parse_equilibrium_price() {
         let item = EquilibriumPrice::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
+        let msg = MessageEnum::try_from(i.to_string());
+        println!("{:?}", msg);
+        assert!(msg.is_ok());
+        assert!(msg.unwrap().tag() == 'Z');
     }
 }
