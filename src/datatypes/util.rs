@@ -33,6 +33,14 @@ pub fn extract_datetime<'a>(s: &'a str) -> Option<NaiveDateTime> {
     None
 }
 
+///
+/// ```rust
+/// let c = $to_iter.chars().next();
+/// match c {
+///     Some(i) if $tag == i => (),
+///     _ => return Err(()),
+/// };
+/// ```
 #[macro_export]
 macro_rules! tag_guard {
     ($tag:literal, $to_iter:ident) => {
