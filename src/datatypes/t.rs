@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-use crate::{tag_guard, util::extract_datetime};
+use crate::tag_guard;
 
 ///
 /// 6.3.1 秒タグ （タグ ID ： T ）
