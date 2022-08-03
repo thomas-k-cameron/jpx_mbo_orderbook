@@ -3,7 +3,10 @@
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-use crate::{tag_guard, util::{extract_datetime, extract_value, extract_value_and_parse}};
+use crate::{
+    tag_guard,
+    util::{extract_datetime, extract_value, extract_value_and_parse},
+};
 
 ///
 /// 6.4.6 EP タグ （タグ ID ： Z ）
