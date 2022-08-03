@@ -23,8 +23,6 @@ use super::util::{extract_datetime, extract_value};
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone, Copy)]
 pub struct PutOrder {
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub order_book_id: u64,
     pub order_book_position: i64,
     pub order_id: u64,
@@ -36,8 +34,6 @@ pub struct PutOrder {
 impl_message! {
     name: PutOrder 'A';
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub order_book_id: u64,
     pub order_book_position: i64,
     pub order_id: u64,
@@ -62,8 +58,6 @@ impl TryFrom<&str> for PutOrder {
         let quantity = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let price = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         Ok(Self {
-            channel: char::MAX,
-            date: i64::MIN,
             timestamp,
             order_book_id,
             order_book_position,

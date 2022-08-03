@@ -1,7 +1,7 @@
 // automatically generated
 use crate::{
     tag_guard,
-    util::{extract_datetime, extract_value},
+    util::{extract_datetime, extract_value, extract_value_and_parse},
     Side,
 };
 
@@ -30,8 +30,6 @@ use std::str::FromStr;
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct ExecutionWithPriceInfo {
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub combo_group_id: i64,
     pub executed_quantity: i64,
     pub match_id: String,
@@ -45,8 +43,6 @@ pub struct ExecutionWithPriceInfo {
 impl_message! {
     name: ExecutionWithPriceInfo 'C';
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub combo_group_id: i64,
     pub executed_quantity: i64,
     pub match_id: String,
@@ -64,9 +60,7 @@ impl TryFrom<&str> for ExecutionWithPriceInfo {
         let mut iter = s.split(",").skip(1);
         let timestamp = extract_datetime(iter.next().ok_or(())?).ok_or(())?;
         let order_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let order_book_id = FromStr::from_str(extract_value(iter.next().ok_or(())?).ok_or(())?)
-            .ok()
-            .ok_or(())?;
+        let order_book_id = extract_value_and_parse(iter.next().ok_or(())?).ok_or(())?;
 
         let side = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
 
@@ -81,8 +75,6 @@ impl TryFrom<&str> for ExecutionWithPriceInfo {
         let occurred_at_cross = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
 
         Ok(Self {
-            channel: char::MAX,
-            date: i64::MIN,
             timestamp,
             combo_group_id,
             executed_quantity,

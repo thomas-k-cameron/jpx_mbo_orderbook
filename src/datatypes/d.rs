@@ -1,7 +1,7 @@
 // automatically generated
 use crate::{
     tag_guard,
-    util::{extract_datetime, extract_value},
+    util::{extract_datetime, extract_value_and_parse},
     Side,
 };
 
@@ -24,8 +24,6 @@ use std::str::FromStr;
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct DeleteOrder {
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub order_book_id: u64,
     pub order_id: u64,
     pub side: Side,
@@ -34,8 +32,6 @@ pub struct DeleteOrder {
 impl_message! {
     name: DeleteOrder 'D';
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub order_book_id: u64,
     pub order_id: u64,
     pub side: Side,
@@ -51,14 +47,10 @@ impl TryFrom<&str> for DeleteOrder {
         let timestamp = extract_datetime(iter.next().ok_or(())?).ok_or(())?;
 
         let order_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let order_book_id = FromStr::from_str(extract_value(iter.next().ok_or(())?).ok_or(())?)
-            .ok()
-            .ok_or(())?;
+        let order_book_id = extract_value_and_parse(iter.next().ok_or(())?).ok_or(())?;
 
         let side = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         Ok(Self {
-            channel: char::MAX,
-            date: i64::MIN,
             timestamp,
             order_book_id,
             order_id,

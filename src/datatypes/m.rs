@@ -1,5 +1,5 @@
 // automatically generated
-use crate::{tag_guard, Side};
+use crate::{tag_guard, util::extract_datetime, Side};
 
 use serde::{Deserialize, Serialize};
 
@@ -23,12 +23,10 @@ use std::str::FromStr;
 ///オンライン開始後、一定時間経過後に提供する。
 ///
 ///テーラーメイドコンビネーション(TMC)が組成されたときに提供する。
-/// 
+///
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct CombinationProduct {
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub combination_order_book_id: u64,
     pub leg_order_book_id: u64,
     pub leg_ratio: i64,
@@ -38,8 +36,6 @@ pub struct CombinationProduct {
 impl_message! {
     name: CombinationProduct 'M';
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub combination_order_book_id: u64,
     pub leg_order_book_id: u64,
     pub leg_ratio: i64,
@@ -51,14 +47,12 @@ impl TryFrom<&str> for CombinationProduct {
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('R', s);
         let mut iter = s.split(",").skip(1);
-        let timestamp = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let timestamp = extract_datetime(iter.next().ok_or(())?).ok_or(())?;
         let combination_order_book_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let leg_order_book_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let leg_side = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let leg_ratio = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         Ok(Self {
-            channel: char::MAX,
-            date: i64::MIN,
             timestamp,
             combination_order_book_id,
             leg_order_book_id,

@@ -23,8 +23,6 @@ use crate::{tag_guard, util::extract_datetime, FinancialProduct, PutOrCall};
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct ProductInfo {
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub expiration_date: i64,
     pub financial_product: FinancialProduct,
     pub long_name: String,
@@ -41,8 +39,6 @@ pub struct ProductInfo {
 impl_message! {
     name: ProductInfo 'R';
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub expiration_date: i64,
     pub financial_product: FinancialProduct,
     pub long_name: String,
@@ -93,8 +89,6 @@ impl TryFrom<&str> for ProductInfo {
         let put_or_call = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
 
         Ok(Self {
-            channel: char::MAX,
-            date: i64::MIN,
             timestamp,
             expiration_date,
             financial_product,

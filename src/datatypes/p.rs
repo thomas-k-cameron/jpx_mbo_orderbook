@@ -24,8 +24,6 @@ use std::str::FromStr;
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct LegPrice {
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub combo_group_id: i64,
     pub match_id: String,
     pub occurred_at_cross: i64,
@@ -38,8 +36,6 @@ pub struct LegPrice {
 impl_message! {
     name: LegPrice 'P';
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub combo_group_id: i64,
     pub match_id: String,
     pub occurred_at_cross: i64,
@@ -63,8 +59,6 @@ impl TryFrom<&str> for LegPrice {
         let side = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let trade_price = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         Ok(Self {
-            channel: char::MAX,
-            date: i64::MIN,
             timestamp,
             combo_group_id,
             match_id,

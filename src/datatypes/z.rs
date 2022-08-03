@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-use crate::tag_guard;
+use crate::{tag_guard, util::{extract_datetime, extract_value, extract_value_and_parse}};
 
 ///
 /// 6.4.6 EP タグ （タグ ID ： Z ）
@@ -18,8 +18,6 @@ use crate::tag_guard;
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct EquilibriumPrice {
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub ask_qty_at_ep: i64,
     pub bid_qty_at_ep: i64,
     pub ep: i64,
@@ -29,8 +27,6 @@ pub struct EquilibriumPrice {
 impl_message! {
     name: EquilibriumPrice 'Z';
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub ask_qty_at_ep: i64,
     pub bid_qty_at_ep: i64,
     pub ep: i64,
@@ -42,14 +38,13 @@ impl TryFrom<&str> for EquilibriumPrice {
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('Z', s);
         let mut iter = s.split(",").skip(1);
-        let timestamp = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let ask_qty_at_ep = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let timestamp = extract_datetime(iter.next().ok_or(())?).ok_or(())?;
+        let order_book_id = extract_value_and_parse(iter.next().ok_or(())?).ok_or(())?;
         let bid_qty_at_ep = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let ask_qty_at_ep = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let ep = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let order_book_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+
         Ok(Self {
-            channel: char::MAX,
-            date: i64::MIN,
             timestamp,
             ask_qty_at_ep,
             bid_qty_at_ep,

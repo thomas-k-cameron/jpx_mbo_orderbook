@@ -20,16 +20,12 @@ use crate::{tag_guard, util::extract_datetime};
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct SystemEventInfo {
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub event_code: String,
 }
 
 impl_message! {
     name: SystemEventInfo 'S';
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub event_code: String,
 }
 
@@ -39,11 +35,9 @@ impl TryFrom<&str> for SystemEventInfo {
         tag_guard!('S', s);
         let mut iter = s.split(",").skip(1);
 
-        let timestamp = extract_datetime(s).ok_or(())?;
+        let timestamp = extract_datetime(iter.next().ok_or(())?).ok_or(())?;
         let event_code = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         Ok(Self {
-            channel: char::MAX,
-            date: i64::MIN,
             timestamp,
             event_code,
         })

@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-use crate::tag_guard;
+use crate::{tag_guard, util::extract_datetime};
 
 ///
 /// 6.3.1 秒タグ （タグ ID ： T ）
@@ -21,16 +21,12 @@ use crate::tag_guard;
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct SecondTag {
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub second: i64,
 }
 
 impl_message! {
     name: SecondTag 'T';
     pub timestamp: NaiveDateTime,
-    pub channel: char,
-    pub date: i64,
     pub second: i64,
 }
 
@@ -39,13 +35,8 @@ impl TryFrom<&str> for SecondTag {
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('T', s);
         let mut iter = s.split(",").skip(1);
-        let timestamp = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let second = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        Ok(Self {
-            channel: char::MAX,
-            date: i64::MIN,
-            timestamp,
-            second,
-        })
+        let timestamp = NaiveDateTime::from_timestamp(second, 0);
+        Ok(Self { timestamp, second })
     }
 }
