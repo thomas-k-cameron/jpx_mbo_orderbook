@@ -121,19 +121,19 @@ macro_rules! impl_message {
         impl FromRecordBatch for $name {
             /// just validation. no detailed error reporting
             fn validate(rb: &RecordBatch) -> bool {
-                $( 
+                $(
                     let mut $field = usize::MAX;
                 ) *
                 for (idx, i) in rb.schema().fields().iter().enumerate() {
                     match i.name().as_str() {
-                        $( 
+                        $(
                             stringify!($field) => $field = idx,
                         ) *
                         _ => ()
                     };
                 }
-                
-                $( 
+
+                $(
                     if $field != usize::MAX {
                         return false
                     }
@@ -146,19 +146,19 @@ macro_rules! impl_message {
                 let mut timestamp = None;
                 // validate
                 {
-                    $( 
+                    $(
                         let mut $field = usize::MAX;
                     ) *
                     for (idx, i) in rb.schema().fields().iter().enumerate() {
                         match i.name().as_str() {
-                            $( 
+                            $(
                                 stringify!($field) => $field = idx,
                             ) *
                             _ => ()
                         };
                     }
-                    
-                    $( 
+
+                    $(
                         if $field != usize::MAX {
                             err_stack.push(
                                 FromRecordBatchError {
@@ -249,7 +249,7 @@ macro_rules! impl_message {
                         }
                         let item = $name {
                             timestamp,
-                            $ ( $field: $field.unwrap(), ) * 
+                            $ ( $field: $field.unwrap(), ) *
                         };
                         stack.push(item);
                     }
@@ -272,7 +272,9 @@ macro_rules! impl_message {
 
 pub trait FromRecordBatch: Sized {
     fn validate(record_batch: &RecordBatch) -> bool;
-    fn from_record_batch(record_batch: &RecordBatch) -> Result<Vec<Self>, Vec<FromRecordBatchError>>;
+    fn from_record_batch(
+        record_batch: &RecordBatch,
+    ) -> Result<Vec<Self>, Vec<FromRecordBatchError>>;
 }
 pub struct FromRecordBatchError {
     pub kind: FromRecordBatchErrorKind,
@@ -282,7 +284,7 @@ pub enum FromRecordBatchErrorKind {
     ValidationError,
     Downcast,
     ColumnNotFound(String),
-    TypeConversionFailed
+    TypeConversionFailed,
 }
 
 pub trait IntoField {

@@ -1,6 +1,6 @@
 use crate::{
-    CombinationProduct, DeleteOrder, Executed, ExecutionWithPriceInfo, ProductInfo, PutOrder, Side,
-    TickSize, EquilibriumPrice, TradingStatusInfo, LegPrice,
+    CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, LegPrice,
+    ProductInfo, PutOrder, Side, TickSize, TradingStatusInfo,
 };
 use std::collections::{BTreeMap, HashMap};
 
@@ -23,7 +23,7 @@ pub struct OrderBook {
     pub bid: BTreeMap<i64, BTreeMap<u64, PutOrder>>,
 
     pub equibrium_price: Option<EquilibriumPrice>,
-    pub trading_status: Option<String>
+    pub trading_status: Option<String>,
 }
 
 pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, PutOrder>>;
@@ -39,7 +39,7 @@ impl OrderBook {
             ask: BTreeMap::new(),
             bid: BTreeMap::new(),
             equibrium_price: None,
-            trading_status: None
+            trading_status: None,
         }
     }
 
@@ -158,13 +158,13 @@ impl OrderBook {
     }
 
     /// Handles C message:   
-    /// 
+    ///
     /// Reduces the quantity of an order which is executed.  
-    /// 
+    ///
     /// returns the putorder of which it was affected.   
-    /// 
+    ///
     /// The put order is cloned and the same order may remain on the orderbook.
-    /// 
+    ///
     pub fn c_executed(&mut self, c: &ExecutionWithPriceInfo) {
         let tree = match c.side {
             Side::Sell => &mut self.ask,

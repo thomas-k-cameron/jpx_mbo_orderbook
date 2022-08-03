@@ -3,14 +3,8 @@
 pub(crate) mod from_btree;
 pub(crate) use from_btree::into_field;
 pub mod from_record_batch {
-    pub use crate::from_btree::{
-        FromRecordBatch,
-        FromRecordBatchErrorKind,
-        FromRecordBatchError
-    };
+    pub use crate::from_btree::{FromRecordBatch, FromRecordBatchError, FromRecordBatchErrorKind};
 }
-
-
 
 mod into_array_ref;
 pub(crate) use into_array_ref::IntoArrayRef;
@@ -63,3 +57,6 @@ pub use leg_side::LegSide;
 
 pub mod util;
 pub use chrono;
+
+#[cfg(test)]
+mod test;
