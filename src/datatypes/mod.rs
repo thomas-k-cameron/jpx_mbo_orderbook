@@ -1,16 +1,6 @@
 // automatically generated
 #[macro_use]
 pub(crate) mod from_btree;
-pub(crate) use from_btree::into_field;
-pub mod from_record_batch {
-    pub use crate::from_btree::{FromRecordBatch, FromRecordBatchError, FromRecordBatchErrorKind};
-}
-
-mod into_array_ref;
-pub(crate) use into_array_ref::IntoArrayRef;
-
-mod into_record_batch;
-pub use into_record_batch::IntoRecordBatch;
 
 mod symbol;
 pub use symbol::Symbol;

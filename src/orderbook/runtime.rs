@@ -8,6 +8,7 @@ use chrono::NaiveDateTime;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 
 use crate::{datatypes::*, OrderBook};
+use crate::MessageEnum;
 
 pub trait OrderBookRunTimeCallback {
     /// executes

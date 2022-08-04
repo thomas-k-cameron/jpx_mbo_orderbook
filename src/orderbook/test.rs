@@ -40,12 +40,12 @@ impl OrderBookRunTimeCallback for TestSpread {
                 bid_price.replace(*price);
             }
             assert!(
-                ask_qty.is_none() && ask_qty.unwrap() > 0,
+                ask_qty.is_none() || ask_qty.unwrap() > 0,
                 "ask qty: timestamp: {}",
                 timestamp
             );
             assert!(
-                bid_qty.is_none() && bid_qty.unwrap() > 0,
+                bid_qty.is_none() || bid_qty.unwrap() > 0,
                 "bid qty: timestamp: {}",
                 timestamp
             );

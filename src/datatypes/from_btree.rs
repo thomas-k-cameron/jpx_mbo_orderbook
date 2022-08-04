@@ -1,11 +1,3 @@
-use crate::Side;
-use chrono::NaiveDateTime;
-use datafusion::arrow::datatypes::{DataType, Field, TimeUnit};
-use datafusion::arrow::record_batch::RecordBatch;
-use std::str;
-
-use crate::{FinancialProduct, PutOrCall};
-
 #[macro_export]
 macro_rules! impl_message {
     (
@@ -14,20 +6,8 @@ macro_rules! impl_message {
         $ ( pub $field:ident: $dt:ty, ) *
     ) => {
         use chrono::NaiveDateTime;
-        use std::collections::BTreeMap;
-        use datafusion::arrow::{array::Array, datatypes::{Schema}, record_batch::RecordBatch};
-        use crate::{
-            into_field,
-            IntoRecordBatch,
-            IntoArrayRef,
-            from_btree::{FromRecordBatchError, FromRecordBatchErrorKind, FromRecordBatch, IntoField}
-        };
 
         impl_message!(set_tag @ $name, $char);
-        impl_message!(from_btree_map @ $char $name $ ( $field $dt ) *);
-        impl_message!(schema @ $name $( $field $dt ) *);
-        impl_message!(IntoRecordBatch @ $name $($field $dt) *);
-        impl_message!(FromRecordBatch @ $name $($field $dt) *);
     };
     (set_tag @ $name:ident, $char:literal) => {
         impl $name {
@@ -269,67 +249,3 @@ macro_rules! impl_message {
         $expr
     };
 }
-
-pub trait FromRecordBatch: Sized {
-    fn validate(record_batch: &RecordBatch) -> bool;
-    fn from_record_batch(
-        record_batch: &RecordBatch,
-    ) -> Result<Vec<Self>, Vec<FromRecordBatchError>>;
-}
-pub struct FromRecordBatchError {
-    pub kind: FromRecordBatchErrorKind,
-    pub name: &'static str,
-}
-pub enum FromRecordBatchErrorKind {
-    ValidationError,
-    Downcast,
-    ColumnNotFound(String),
-    TypeConversionFailed,
-}
-
-pub trait IntoField {
-    type ArrayType;
-    fn field(s: &str) -> Field;
-    fn datatype() -> DataType;
-}
-
-pub fn into_field<T: IntoField>(s: &str) -> Field {
-    T::field(s)
-}
-
-macro_rules! impl_into_field {
-    ($( $ty:ty, $dt:expr, $array_dt:ident ) *) => {
-        use datafusion::arrow::array::{
-            TimestampNanosecondArray,
-            UInt64Array,
-            Int64Array,
-            UInt8Array,
-            StringArray,
-            BooleanArray,
-            Int8Array
-        };
-        $(
-            impl IntoField for $ty {
-                type ArrayType = $array_dt;
-                fn field(s: &str) -> Field {
-                    Field::new(s, $dt, false)
-                }
-                fn datatype() -> DataType {
-                    $dt
-                }
-            }
-        ) *
-    };
-}
-
-impl_into_field!(
-    NaiveDateTime, DataType::Timestamp(TimeUnit::Nanosecond, None), TimestampNanosecondArray
-    u64, DataType::UInt64, UInt64Array
-    i64, DataType::Int64, Int64Array
-    String, DataType::Utf8, StringArray
-    Option<String>, DataType::Utf8, StringArray
-    Side, DataType::Boolean, BooleanArray
-    PutOrCall, DataType::Int8, Int8Array
-    FinancialProduct, DataType::Int8, Int8Array
-    char, DataType::UInt8, UInt8Array
-);
