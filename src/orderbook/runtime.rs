@@ -1,11 +1,9 @@
 use std::{
     collections::{BTreeMap, HashMap},
     fmt::Debug,
-    io,
 };
 
 use chrono::NaiveDateTime;
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, BufReader};
 
 use crate::{datatypes::*, OrderBook};
 use crate::MessageEnum;
@@ -28,7 +26,7 @@ pub trait OrderBookRunTimeCallback {
     fn timeframe_end(
         &mut self,
         order_book_map: &mut HashMap<u64, OrderBook>,
-        timestamp: &NaiveDateTime,
+        timestamp: &NaiveDateTime
     ) {
     }
 }
