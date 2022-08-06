@@ -1,5 +1,5 @@
 use crate::{
-    CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, LegPrice,
+    CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
     ProductInfo, PutOrder, Side, TickSize, TradingStatusInfo,
 };
 use std::collections::{BTreeMap, HashMap};
@@ -18,9 +18,9 @@ pub struct OrderBook {
     /// index to map orders
     pub orders: HashMap<(u64, Side), i64>, // id => price
     /// key is the price, embeded map's key is the order id of the value's put order
-    pub ask: BTreeMap<i64, BTreeMap<u64, PutOrder>>,
+    pub ask: PriceLevel,
     /// key is the price, embeded map's key is the order id of the value's put order
-    pub bid: BTreeMap<i64, BTreeMap<u64, PutOrder>>,
+    pub bid: PriceLevel,
 
     pub equibrium_price: Option<EquilibriumPrice>,
     pub trading_status: Option<String>,
@@ -40,6 +40,28 @@ impl OrderBook {
             bid: BTreeMap::new(),
             equibrium_price: None,
             trading_status: None,
+        }
+    }
+
+    /// fetches a single order from OrderBook
+    pub fn order(&self, order_id: u64, side: Side) -> Option<&PutOrder> {
+        let half = match side {
+            Side::Buy => &self.ask,
+            Side::Sell => &self.bid
+        };
+        let key = (order_id, side);
+        if let Some(price) = self.orders.get(&key) {
+            if let Some(order_map) = half.get(price) {
+                if let Some(put) = order_map.get(&order_id) {
+                    Some(put)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        } else {
+            None
         }
     }
 
@@ -165,7 +187,7 @@ impl OrderBook {
     ///
     /// The put order is cloned and the same order may remain on the orderbook.
     ///
-    pub fn c_executed(&mut self, c: &ExecutionWithPriceInfo) {
+    pub fn c_executed(&mut self, c: &ExecutionWithPriceInfo) -> PutOrder {
         let tree = match c.side {
             Side::Sell => &mut self.ask,
             Side::Buy => &mut self.bid,
@@ -185,9 +207,11 @@ impl OrderBook {
             unreachable!("{}", func_e())
         };
 
+        let mut opts = None;
         let check = if let Some(a) = level.get_mut(&c.order_id) {
             a.quantity -= c.executed_quantity;
             assert!(a.quantity >= 0);
+            opts.replace(a.clone());
             a.quantity == 0
         } else {
             unreachable!("{}", func_e())
@@ -201,6 +225,8 @@ impl OrderBook {
         if level.len() == 0 {
             tree.remove(&price);
         }
+
+        opts.unwrap()
     }
 
     pub fn set_last_equilibrium_price(&mut self, z: EquilibriumPrice) {
