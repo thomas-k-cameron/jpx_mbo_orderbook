@@ -27,12 +27,22 @@ use std::str::FromStr;
 /// をレグの数だけ配信する。
 ///
 /// 板寄せで複数の注文が約定した場合は既発注の注文サイドに関係なく、約定した売注文、及び買注文すべてに対して C タグが配信される。
+/// 
+/// Occured At Cross
+/// 板寄せ約定判別フラグ
+/// コード 項目設定値説明
+/// - Y 板寄約定
+/// - N ザラバ約定
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
 pub struct ExecutionWithPriceInfo {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
     pub executed_quantity: i64,
     pub match_id: String,
+    /// 板寄せ約定判別フラグ
+    /// コード 項目設定値説明
+    /// - Y 板寄約定
+    /// - N ザラバ約定
     pub occurred_at_cross: String,
     pub order_book_id: u64,
     pub order_id: u64,
