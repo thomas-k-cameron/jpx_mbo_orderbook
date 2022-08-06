@@ -5,8 +5,10 @@ use std::{
 
 use chrono::NaiveDateTime;
 
-use crate::{datatypes::*, OrderBook};
 use crate::MessageEnum;
+use crate::{datatypes::*, OrderBook};
+
+use crate::callback_datatype::*;
 
 pub trait OrderBookRunTimeCallback {
     /// executes
@@ -26,7 +28,34 @@ pub trait OrderBookRunTimeCallback {
     fn timeframe_end(
         &mut self,
         order_book_map: &mut HashMap<u64, OrderBook>,
-        timestamp: &NaiveDateTime
+        timestamp: &NaiveDateTime,
+    ) {
+    }
+
+    #[inline]
+    /// called only when `E` tag message was received
+    fn executions(
+        &mut self,
+        timestamp: &NaiveDateTime,
+        executions: Vec<OrderExecution>
+    ) {
+    }
+
+    #[inline]
+    /// called only when `C` tag message was received
+    fn executed_with_price_info(
+        &mut self,
+        timestamp: &NaiveDateTime,
+        executed_with_price_info: Vec<OrderExecutionWithPriceInfo>
+    ) {
+    }
+
+    #[inline]
+    /// called only when `D` tag message was received
+    fn deletions(
+        &mut self,
+        timestamp: &NaiveDateTime,
+        deletion: Vec<OrderDeletion>
     ) {
     }
 }
@@ -48,6 +77,14 @@ pub fn order_book_runtime<A>(
     for (timestamp, stack) in key_as_timestamp {
         callback.timeframe_start(order_book_map, &timestamp, &stack[..]);
         // pre processing
+
+        // stacks put order retrieved after `Executed` message  is handled
+        let mut executions = vec![];
+        // stacks put order retrieved after `ExecutionWithPriceInfo` message is handled
+        let mut executed_with_price_info = vec![];
+        // stacks put order retrieved after `DeleteOrder` message is handled
+        let mut deletion = vec![];
+
         for msg in stack {
             callback.pre_message(order_book_map, &msg);
             match msg {
@@ -81,27 +118,44 @@ pub fn order_book_runtime<A>(
                 // order CRUD. New order insertion, deletion, execution (reduction of order qty)
                 MessageEnum::PutOrder(msg) => {
                     order_book_map
-                        .get_mut(&msg.order_book_id)
+                        .get_mut(&msg.order_book_id) 
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .put(msg);
                 }
                 MessageEnum::DeleteOrder(msg) => {
-                    order_book_map
+                    let put_order = order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .delete(&msg);
+
+                    let item = OrderDeletion {
+                        put_order,
+                        msg
+                    };
+                    deletion.push(item);
                 }
                 MessageEnum::Executed(msg) => {
-                    order_book_map
+                    let put_order = order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .executed(&msg);
+                    let item = OrderExecution {
+                        put_order,
+                        msg
+                    };
+                    executions.push(item);
                 }
                 MessageEnum::ExecutionWithPriceInfo(msg) => {
-                    order_book_map
+                    let put_order = order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .c_executed(&msg);
+
+                    let item = OrderExecutionWithPriceInfo {
+                        put_order,
+                        msg
+                    };
+                    executed_with_price_info.push(item);
                 }
                 // things that I don't know what to do with
                 MessageEnum::CombinationProduct(_msg) => {
@@ -119,6 +173,19 @@ pub fn order_book_runtime<A>(
             };
             callback.after_message(order_book_map);
         }
+        
+        if executions.len() > 0 {
+            callback.executions(&timestamp, executions);
+        }
+        
+        if executed_with_price_info.len() > 0 {
+            callback.executed_with_price_info(&timestamp, executed_with_price_info);
+        }
+        
+        if deletion.len() > 0 {
+            callback.deletions(&timestamp, deletion);
+        }
+        
         // post processing
         callback.timeframe_end(order_book_map, &timestamp);
     }
