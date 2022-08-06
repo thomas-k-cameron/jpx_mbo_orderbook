@@ -44,25 +44,21 @@ impl OrderBook {
     }
 
     /// fetches a single order from OrderBook
-    pub fn order(&self, order_id: u64, side: Side) -> Option<&PutOrder> {
+    pub fn order(&self, order_id: &u64, side: &Side) -> Option<&PutOrder> {
         let half = match side {
             Side::Buy => &self.ask,
-            Side::Sell => &self.bid
+            Side::Sell => &self.bid,
         };
-        let key = (order_id, side);
+        let key = (*order_id, *side);
         if let Some(price) = self.orders.get(&key) {
             if let Some(order_map) = half.get(price) {
                 if let Some(put) = order_map.get(&order_id) {
-                    Some(put)
-                } else {
-                    None
+                    return Some(put)
                 }
-            } else {
-                None
             }
-        } else {
-            None
-        }
+        };
+
+        None
     }
 
     /// returns order_book_id

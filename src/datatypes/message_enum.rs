@@ -5,7 +5,7 @@ use crate::{
 };
 
 use chrono::NaiveDateTime;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 macro_rules! dclr_message_enum {
     ($($ident:ident,)*) => {
@@ -53,7 +53,7 @@ macro_rules! dclr_message_enum {
                 return Err(string)
             }
         }
-        
+
     };
 }
 
@@ -73,7 +73,6 @@ dclr_message_enum!(
 );
 
 impl MessageEnum {
-
     pub fn struct_name_to_tag(struct_name: &str) -> Option<char> {
         match struct_name {
             "CombinationProduct" => 'M',
@@ -88,8 +87,9 @@ impl MessageEnum {
             "SystemEventInfo" => 'S',
             "TickSize" => 'L',
             "TradingStatusInfo" => 'O',
-            _ => return None
-        }.into()
+            _ => return None,
+        }
+        .into()
     }
 
     pub fn tag_to_struct_name(tag: char) -> Option<&'static str> {
@@ -106,7 +106,8 @@ impl MessageEnum {
             'S' => "SystemEventInfo",
             'L' => "TickSize",
             'O' => "TradingStatusInfo",
-            _ => return None
-        }.into()
+            _ => return None,
+        }
+        .into()
     }
 }
