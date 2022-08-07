@@ -12,10 +12,13 @@ use crate::callback_datatype::*;
 
 pub trait OrderBookRunTimeCallback {
     /// executes
+    #[allow(unused_variables)]
     #[inline]
     fn pre_message(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, msg: &MessageEnum) {}
+    #[allow(unused_variables)]
     #[inline]
     fn after_message(&mut self, order_book_map: &mut HashMap<u64, OrderBook>) {}
+    #[allow(unused_variables)]
     #[inline]
     fn timeframe_start(
         &mut self,
@@ -24,6 +27,7 @@ pub trait OrderBookRunTimeCallback {
         stack: &[MessageEnum],
     ) {
     }
+    #[allow(unused_variables)]
     #[inline]
     fn timeframe_end(
         &mut self,
@@ -32,6 +36,7 @@ pub trait OrderBookRunTimeCallback {
     ) {
     }
 
+    #[allow(unused_variables)]
     #[inline]
     /// called only when `E` tag message was received
     fn executions(
@@ -41,6 +46,7 @@ pub trait OrderBookRunTimeCallback {
     ) {
     }
 
+    #[allow(unused_variables)]
     #[inline]
     /// called only when `C` tag message was received
     fn executed_with_price_info(
@@ -50,6 +56,7 @@ pub trait OrderBookRunTimeCallback {
     ) {
     }
 
+    #[allow(unused_variables)]
     #[inline]
     /// called only when `D` tag message was received
     fn deletions(
