@@ -20,7 +20,7 @@ use crate::{tag_guard, util::extract_datetime, FinancialProduct, PutOrCall};
 /// テーラーメイドコンビネーション(TMC)が組成されたときに提供する。  
 ///
 /// J-GATE 内で銘柄情報の更新が発生したときに提供する。(R タグで出力していない情報が更新された時にも提供する場合がある。)  
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct ProductInfo {
     pub timestamp: NaiveDateTime,
     pub expiration_date: i64,
