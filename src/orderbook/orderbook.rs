@@ -88,19 +88,19 @@ impl OrderBook {
             unreachable!("{}", func_d())
         };
 
-        let level = if let Some(l) = tree.get_mut(&price) {
+        let price_level = if let Some(l) = tree.get_mut(&price) {
             l
         } else {
             unreachable!("{}", func_d())
         };
 
-        let a = if let Some(a) = level.remove(&id) {
+        let a = if let Some(a) = price_level.remove(&id) {
             a
         } else {
             unreachable!("{}", func_d())
         };
 
-        if level.len() == 0 {
+        if price_level.len() == 0 {
             tree.remove(&price);
         }
 
