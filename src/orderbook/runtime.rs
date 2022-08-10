@@ -1,6 +1,6 @@
 use std::{
     collections::{BTreeMap, HashMap},
-    fmt::Debug,
+    fmt::Debug
 };
 
 use chrono::NaiveDateTime;
@@ -82,6 +82,7 @@ pub fn order_book_runtime<A>(
     }
 
     for (timestamp, stack) in key_as_timestamp {
+        // sort stack
         callback.timeframe_start(order_book_map, &timestamp, &stack[..]);
         // pre processing
 
