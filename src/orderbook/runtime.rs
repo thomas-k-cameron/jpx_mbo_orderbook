@@ -55,6 +55,12 @@ pub trait OrderBookRunTimeCallback {
     #[inline]
     /// called only when `D` tag message was received
     fn deletions(&mut self, timestamp: &NaiveDateTime, deletion: Vec<OrderDeletion>) {}
+
+    #[allow(unused_variables)]
+    #[inline]
+    fn all_done(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime) {
+        
+    }
 }
 
 pub fn order_book_runtime<A>(
@@ -71,6 +77,13 @@ pub fn order_book_runtime<A>(
         )
     }
 
+    let ts = match key_as_timestamp.iter().last() {
+        Some((ts, _)) => *ts,
+        None => {
+            println!("no message received");
+            return
+        }
+    };
     for (timestamp, stack) in key_as_timestamp {
         // sort stack
         callback.timeframe_start(order_book_map, &timestamp, &stack[..]);
@@ -177,6 +190,11 @@ pub fn order_book_runtime<A>(
 
         // post processing
         callback.timeframe_end(order_book_map, &timestamp);
+
+        // this is expected to happen only once
+        if timestamp == ts {
+            callback.all_done(order_book_map, &timestamp);
+        }
     }
 }
 
