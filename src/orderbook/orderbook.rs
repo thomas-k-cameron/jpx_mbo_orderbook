@@ -18,10 +18,10 @@ pub struct OrderBook {
     /// index to map orders
     pub orders: HashMap<(u64, Side), i64>, // id => price
     /// key is the price, embeded map's key is the order id of the value's put order
-    /// price => {id: PutOrder}
+    /// price => {id: AddOrder}
     pub ask: PriceLevel,
     /// key is the price, embeded map's key is the order id of the value's put order
-    /// price => {id: PutOrder}
+    /// price => {id: AddOrder}
     pub bid: PriceLevel,
 
     pub equibrium_price: Option<EquilibriumPrice>,
@@ -181,7 +181,7 @@ impl OrderBook {
     ///
     /// Reduces the quantity of an order which is executed.  
     ///
-    /// returns the putorder of which it was affected.   
+    /// returns the AddOrder of which it was affected.   
     ///
     /// The put order is cloned and the same order may remain on the orderbook.
     ///

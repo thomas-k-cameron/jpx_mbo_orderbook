@@ -114,36 +114,36 @@ pub fn order_book_runtime<A>(
                         .set_last_equilibrium_price(msg);
                 }
                 // order CRUD. New order insertion, deletion, execution (reduction of order qty)
-                MessageEnum::PutOrder(msg) => {
+                MessageEnum::AddOrder(msg) => {
                     order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .put(msg);
                 }
                 MessageEnum::DeleteOrder(msg) => {
-                    let put_order = order_book_map
+                    let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .delete(&msg);
 
-                    let item = OrderDeletion { put_order, msg };
+                    let item = OrderDeletion { add_order, msg };
                     deletion.push(item);
                 }
                 MessageEnum::Executed(msg) => {
-                    let put_order = order_book_map
+                    let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .executed(&msg);
-                    let item = OrderExecution { put_order, msg };
+                    let item = OrderExecution { add_order, msg };
                     executions.push(item);
                 }
                 MessageEnum::ExecutionWithPriceInfo(msg) => {
-                    let put_order = order_book_map
+                    let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .c_executed(&msg);
 
-                    let item = OrderExecutionWithPriceInfo { put_order, msg };
+                    let item = OrderExecutionWithPriceInfo { add_order, msg };
                     executed_with_price_info.push(item);
                 }
                 // things that I don't know what to do with
