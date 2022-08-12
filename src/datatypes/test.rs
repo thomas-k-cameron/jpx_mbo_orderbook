@@ -1,6 +1,6 @@
 use crate::{
     CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, LegPrice,
-    MessageEnum, ProductInfo, PutOrder, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
+    MessageEnum, ProductInfo, AddOrder, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
 };
 
 #[test]
@@ -11,7 +11,7 @@ fn parse_put_order() {
         "A,2021-02-28T21:07:50.931282000(1614546470931282000),7389199179314731270,PUT_NK225_210611_17750(142017012),B,2,10,30000,0,2"
     ];
     for i in list {
-        let item = PutOrder::try_from(i);
+        let item = AddOrder::try_from(i);
         println!("{:?}", item);
         assert!(item.is_ok());
         let msg = MessageEnum::try_from(i.to_string());

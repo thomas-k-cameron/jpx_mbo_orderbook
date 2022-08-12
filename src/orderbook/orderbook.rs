@@ -1,6 +1,6 @@
 use crate::{
     CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
-    ProductInfo, PutOrder, Side, TickSize, TradingStatusInfo,
+    ProductInfo, AddOrder, Side, TickSize, TradingStatusInfo,
 };
 use std::collections::{BTreeMap, HashMap};
 
@@ -18,15 +18,17 @@ pub struct OrderBook {
     /// index to map orders
     pub orders: HashMap<(u64, Side), i64>, // id => price
     /// key is the price, embeded map's key is the order id of the value's put order
+    /// price => {id: PutOrder}
     pub ask: PriceLevel,
     /// key is the price, embeded map's key is the order id of the value's put order
+    /// price => {id: PutOrder}
     pub bid: PriceLevel,
 
     pub equibrium_price: Option<EquilibriumPrice>,
     pub trading_status: Option<String>,
 }
 
-pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, PutOrder>>;
+pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, AddOrder>>;
 
 impl OrderBook {
     /// creates new orderbook with ProductInfo
@@ -44,7 +46,7 @@ impl OrderBook {
     }
 
     /// fetches a single order from OrderBook
-    pub fn order(&self, order_id: &u64, side: &Side) -> Option<&PutOrder> {
+    pub fn order(&self, order_id: &u64, side: &Side) -> Option<&AddOrder> {
         let half = match side {
             Side::Buy => &self.ask,
             Side::Sell => &self.bid,
@@ -53,7 +55,7 @@ impl OrderBook {
         if let Some(price) = self.orders.get(&key) {
             if let Some(order_map) = half.get(price) {
                 if let Some(put) = order_map.get(&order_id) {
-                    return Some(put)
+                    return Some(put);
                 }
             }
         };
@@ -73,7 +75,7 @@ impl OrderBook {
 
     /// handles delete order message.
     /// put ordere returned is the deleted put order
-    pub fn delete(&mut self, d: &DeleteOrder) -> PutOrder {
+    pub fn delete(&mut self, d: &DeleteOrder) -> AddOrder {
         let id = d.order_id;
         let side = d.side;
         let tree = match side {
@@ -108,7 +110,7 @@ impl OrderBook {
     }
 
     /// inserts new order onto orderbook
-    pub fn put(&mut self, a: PutOrder) {
+    pub fn put(&mut self, a: AddOrder) {
         let tree = match a.side {
             Side::Sell => &mut self.ask,
             Side::Buy => &mut self.bid,
@@ -133,7 +135,7 @@ impl OrderBook {
 
     /// Handles E message:
     /// Reduces the quantity of an order which is executed against.
-    pub fn executed(&mut self, e: &Executed) -> PutOrder {
+    pub fn executed(&mut self, e: &Executed) -> AddOrder {
         let tree = match e.side {
             Side::Sell => &mut self.ask,
             Side::Buy => &mut self.bid,
@@ -183,7 +185,7 @@ impl OrderBook {
     ///
     /// The put order is cloned and the same order may remain on the orderbook.
     ///
-    pub fn c_executed(&mut self, c: &ExecutionWithPriceInfo) -> PutOrder {
+    pub fn c_executed(&mut self, c: &ExecutionWithPriceInfo) -> AddOrder {
         let tree = match c.side {
             Side::Sell => &mut self.ask,
             Side::Buy => &mut self.bid,

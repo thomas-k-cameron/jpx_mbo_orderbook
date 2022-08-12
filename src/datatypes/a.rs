@@ -21,7 +21,7 @@ use super::util::{extract_datetime, extract_value};
 ///
 ///朝、銘柄情報基本タグが配信されたのちに、リロードされた GTD/GTC 注文に関わる新規注文タグが出力される。
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone, Copy)]
-pub struct PutOrder {
+pub struct AddOrder {
     pub timestamp: NaiveDateTime,
     pub order_book_id: u64,
     pub order_book_position: i64,
@@ -32,7 +32,7 @@ pub struct PutOrder {
 }
 
 impl_message! {
-    name: PutOrder 'A';
+    name: AddOrder 'A';
     pub timestamp: NaiveDateTime,
     pub order_book_id: u64,
     pub order_book_position: i64,
@@ -42,7 +42,7 @@ impl_message! {
     pub side: Side,
 }
 
-impl TryFrom<&str> for PutOrder {
+impl TryFrom<&str> for AddOrder {
     type Error = ();
     //(s: &str, row_no: i64, filename: i64)
     fn try_from(s: &str) -> Result<Self, Self::Error> {

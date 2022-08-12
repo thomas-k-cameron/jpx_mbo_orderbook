@@ -6,7 +6,7 @@ mod symbol;
 pub use symbol::Symbol;
 
 mod a;
-pub use a::PutOrder;
+pub use a::AddOrder;
 mod c;
 pub use c::ExecutionWithPriceInfo;
 mod d;
