@@ -24,7 +24,7 @@ use std::str::FromStr;
 ///
 ///テーラーメイドコンビネーション(TMC)が組成されたときに提供する。
 ///
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct CombinationProduct {
     pub timestamp: NaiveDateTime,
     pub combination_order_book_id: u64,

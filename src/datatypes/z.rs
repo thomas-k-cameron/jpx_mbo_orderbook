@@ -18,7 +18,7 @@ use crate::{
 /// （２） タグ出力タイミング
 ///
 /// 注文受付中、DCB 中、取引停止中等の注文受付時間帯で、タグの内容(予備項目も含む)が更新されるたびに提供される。
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct EquilibriumPrice {
     pub timestamp: NaiveDateTime,
     pub ask_qty_at_ep: i64,

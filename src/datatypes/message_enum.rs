@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 macro_rules! dclr_message_enum {
     ($($ident:ident,)*) => {
-        #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+        #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
         #[serde(tag = "tag")]
         pub enum MessageEnum {
             $( $ident($ident), )*

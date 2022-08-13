@@ -18,7 +18,7 @@ use crate::tag_guard;
 ///
 ///ITCH からのいずれかのメッセージの配信時。
 
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct SecondTag {
     pub timestamp: NaiveDateTime,
     pub second: i64,

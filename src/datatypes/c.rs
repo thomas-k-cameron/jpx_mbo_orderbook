@@ -33,7 +33,7 @@ use std::str::FromStr;
 /// コード 項目設定値説明
 /// - Y 板寄約定
 /// - N ザラバ約定
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct ExecutionWithPriceInfo {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,

@@ -21,7 +21,7 @@ use std::str::FromStr;
 /// また、コンボ銘柄とコンボ銘柄が約定した場合、コンボ同士の約定を示す価格情報付約定通知(C タグ)と、コンボの構成レグに対して、約定価
 ///
 /// 格を通知する建値通知タグ（P タグ）をレグの数だけ配信する。
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct LegPrice {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,

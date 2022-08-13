@@ -19,7 +19,7 @@ use crate::{
 /// （２） タグ出力タイミング
 ///
 /// オンライン開始後、一定時間経過後に提供する。
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct TickSize {
     pub timestamp: NaiveDateTime,
     pub order_book_id: u64,

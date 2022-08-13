@@ -23,7 +23,7 @@ use std::str::FromStr;
 ///（２） タグ出力タイミング
 ///
 ///注文の部分又は全約定の都度出力する。
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct Executed {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,

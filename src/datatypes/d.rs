@@ -21,7 +21,7 @@ use std::str::FromStr;
 /// 通常、注文が削除となった場合に提供する。
 ///
 /// 注文訂正時は、削除注文タグによる取消し後、訂正後の注文に係る新規注文タグが出力される。
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct DeleteOrder {
     pub timestamp: NaiveDateTime,
     pub order_book_id: u64,

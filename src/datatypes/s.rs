@@ -17,7 +17,7 @@ use crate::{tag_guard, util::extract_datetime};
 ///システムイベントの更新のタイミングで提供する。
 ///
 ///詳細は、4.2.6(4) 章を参照のこと。
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct SystemEventInfo {
     pub timestamp: NaiveDateTime,
     pub event_code: String,

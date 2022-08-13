@@ -20,7 +20,7 @@ use crate::{
 ///取引ステータスの更新のタイミングで、銘柄毎に提供する。
 ///
 ///連続 DCB となるケースでは、DCB から DCB へ遷移する時に、一旦 ZARABA のステータスを配信し、同時に DCB のステータスを配信する
-#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct TradingStatusInfo {
     pub timestamp: NaiveDateTime,
     pub order_book_id: u64,
