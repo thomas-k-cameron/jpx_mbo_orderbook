@@ -7,6 +7,12 @@ pub enum Side {
     Sell = -1,
 }
 
+impl Default for Side {
+    fn default() -> Self {
+        Self::Buy
+    }
+}
+
 impl TryFrom<char> for Side {
     type Error = ();
     fn try_from(c: char) -> Result<Self, ()> {
