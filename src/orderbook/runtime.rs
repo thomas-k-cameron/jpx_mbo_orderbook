@@ -11,6 +11,10 @@ use crate::{datatypes::*, OrderBook};
 use crate::callback_datatype::*;
 
 pub trait OrderBookRunTimeCallback {
+    // stops the runtime when true is returned
+    fn stop(&mut self) -> bool {
+        false
+    }
     /// executes
     #[allow(unused_variables)]
     #[inline]
@@ -39,13 +43,14 @@ pub trait OrderBookRunTimeCallback {
     #[allow(unused_variables)]
     #[inline]
     /// called only when `E` tag message was received
-    fn executions(&mut self, timestamp: &NaiveDateTime, executions: Vec<OrderExecution>) {}
+    fn executions(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime, executions: Vec<OrderExecution>) {}
 
     #[allow(unused_variables)]
     #[inline]
     /// called only when `C` tag message was received
     fn executed_with_price_info(
         &mut self,
+        order_book_map: &mut HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
         executed_with_price_info: Vec<OrderExecutionWithPriceInfo>,
     ) {
@@ -54,12 +59,15 @@ pub trait OrderBookRunTimeCallback {
     #[allow(unused_variables)]
     #[inline]
     /// called only when `D` tag message was received
-    fn deletions(&mut self, timestamp: &NaiveDateTime, deletion: Vec<OrderDeletion>) {}
+    fn deletions(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime, deletion: Vec<OrderDeletion>) {}
 
     #[allow(unused_variables)]
     #[inline]
-    fn all_done(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime) {
-        
+    fn all_done(
+        &mut self,
+        order_book_map: &mut HashMap<u64, OrderBook>,
+        timestamp: &NaiveDateTime,
+    ) {
     }
 }
 
@@ -81,7 +89,7 @@ pub fn order_book_runtime<A>(
         Some((ts, _)) => *ts,
         None => {
             println!("no message received");
-            return
+            return;
         }
     };
     for (timestamp, stack) in key_as_timestamp {
@@ -97,6 +105,9 @@ pub fn order_book_runtime<A>(
         let mut deletion = vec![];
 
         for msg in stack {
+            if callback.stop() {
+                break;
+            }
             callback.pre_message(order_book_map, &msg);
             match msg {
                 MessageEnum::SecondTag(_msg) => {
@@ -139,7 +150,7 @@ pub fn order_book_runtime<A>(
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .delete(&msg);
 
-                    let item = OrderDeletion { add_order, msg };
+                    let item = OrderDeletion { deleted_order: add_order, msg };
                     deletion.push(item);
                 }
                 MessageEnum::Executed(msg) => {
@@ -147,7 +158,7 @@ pub fn order_book_runtime<A>(
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .executed(&msg);
-                    let item = OrderExecution { add_order, msg };
+                    let item = OrderExecution { matched_order_after_execution: add_order, msg };
                     executions.push(item);
                 }
                 MessageEnum::ExecutionWithPriceInfo(msg) => {
@@ -156,7 +167,7 @@ pub fn order_book_runtime<A>(
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .c_executed(&msg);
 
-                    let item = OrderExecutionWithPriceInfo { add_order, msg };
+                    let item = OrderExecutionWithPriceInfo { matched_order_after_execution: add_order, msg };
                     executed_with_price_info.push(item);
                 }
                 // things that I don't know what to do with
@@ -177,25 +188,21 @@ pub fn order_book_runtime<A>(
         }
 
         if executions.len() > 0 {
-            callback.executions(&timestamp, executions);
+            callback.executions(order_book_map, &timestamp, executions);
         }
 
         if executed_with_price_info.len() > 0 {
-            callback.executed_with_price_info(&timestamp, executed_with_price_info);
+            callback.executed_with_price_info(order_book_map, &timestamp, executed_with_price_info);
         }
 
         if deletion.len() > 0 {
-            callback.deletions(&timestamp, deletion);
+            callback.deletions(order_book_map, &timestamp, deletion);
         }
 
         // post processing
         callback.timeframe_end(order_book_map, &timestamp);
-
-        // this is expected to happen only once
-        if timestamp == ts {
-            callback.all_done(order_book_map, &timestamp);
-        }
     }
+    callback.all_done(order_book_map, &ts);
 }
 
 pub fn from_raw_file(file: String) -> ParseResult {

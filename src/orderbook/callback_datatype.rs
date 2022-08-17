@@ -1,16 +1,16 @@
 use crate::datatypes::*;
 
 pub struct OrderExecution {
-    pub add_order: AddOrder,
+    pub matched_order_after_execution: AddOrder,
     pub msg: Executed,
 }
 
 pub struct OrderExecutionWithPriceInfo {
-    pub add_order: AddOrder,
+    pub matched_order_after_execution: AddOrder,
     pub msg: ExecutionWithPriceInfo,
 }
 
 pub struct OrderDeletion {
-    pub add_order: AddOrder,
+    pub deleted_order: AddOrder,
     pub msg: DeleteOrder,
 }

@@ -1,6 +1,6 @@
 use crate::{
-    CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, LegPrice,
-    MessageEnum, ProductInfo, AddOrder, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
+    AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
+    LegPrice, MessageEnum, ProductInfo, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
 };
 
 #[test]

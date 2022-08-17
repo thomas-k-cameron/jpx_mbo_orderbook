@@ -1,6 +1,8 @@
+use chrono::NaiveDateTime;
+
 use crate::{
-    CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
-    ProductInfo, AddOrder, Side, TickSize, TradingStatusInfo,
+    AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
+    ProductInfo, Side, TickSize, TradingStatusInfo,
 };
 use std::collections::{BTreeMap, HashMap};
 
@@ -71,6 +73,18 @@ impl OrderBook {
     // append l message. This message contains information about tick size
     pub fn append_l(&mut self, l: TickSize) {
         self.tick_info.push(l);
+    }
+
+    pub fn qty(&self, price: i64, side: Side) -> Option<i64> {
+        let book = match side {
+            Side::Buy => &self.bid,
+            Side::Sell => &self.ask
+        };
+        for i in book.get(&price) {
+            return Some(i.iter().fold(0, |a, (_, b)| a + b.quantity));
+        }
+
+        None
     }
 
     /// handles delete order message.
