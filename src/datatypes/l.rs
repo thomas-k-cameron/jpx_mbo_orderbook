@@ -44,9 +44,9 @@ impl TryFrom<&str> for TickSize {
         let mut iter = s.split(",").skip(1);
         let timestamp = extract_datetime(iter.next().ok_or(())?).ok_or(())?;
         let order_book_id = extract_value_and_parse(iter.next().ok_or(())?).ok_or(())?;
+        let tick_size = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let price_from = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let price_to = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let tick_size = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         Ok(Self {
             timestamp,
             order_book_id,
