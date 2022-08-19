@@ -31,6 +31,10 @@ pub struct OrderBook {
 }
 
 pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, AddOrder>>;
+pub struct PriceLevelView {
+    pub price: i64,
+    pub qty: i64
+}
 
 impl OrderBook {
     /// creates new orderbook with ProductInfo
@@ -63,6 +67,49 @@ impl OrderBook {
         };
 
         None
+    }
+
+    pub fn price_qty_at(&self, price: i64, qty: i64, side: Side) -> Option<PriceLevelView> {
+        let half = match side {
+            Side::Buy => &self.bid,
+            Side::Sell => &self.ask
+        };
+        let mut opts = None;
+        for i in half.get(&price) {
+            let qty = i.iter().fold(0, |qty, (_, add)| qty + add.quantity);
+            let v = PriceLevelView {
+                qty,
+                price
+            };
+            opts.replace(v);
+        }
+        opts
+    }
+
+    pub fn best_bid(&self) -> Option<PriceLevelView> {
+        let mut opts = None;
+        if let Some((price, val)) = self.bid.iter().next_back() {
+            let v = PriceLevelView {
+                price: *price,
+                qty: val.iter().fold(0, |qty, (_, add)| qty + add.quantity)
+            };
+            opts.replace(v);
+        };
+
+        opts
+    }
+
+    pub fn best_ask(&self) -> Option<PriceLevelView> {
+        let mut opts = None;
+        if let Some((price, val)) = self.ask.iter().next() {
+            let v = PriceLevelView {
+                price: *price,
+                qty: val.iter().fold(0, |qty, (_, add)| qty + add.quantity)
+            };
+            opts.replace(v);
+        };
+
+        opts
     }
 
     /// returns order_book_id
