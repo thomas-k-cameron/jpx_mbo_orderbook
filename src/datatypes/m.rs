@@ -45,7 +45,7 @@ impl_message! {
 impl TryFrom<&str> for CombinationProduct {
     type Error = ();
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        tag_guard!('R', s);
+        tag_guard!('M', s);
         let mut iter = s.split(",").skip(1);
         let timestamp = extract_datetime(iter.next().ok_or(())?).ok_or(())?;
         let combination_order_book_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
