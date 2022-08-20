@@ -1,5 +1,5 @@
 // automatically generated
-use crate::{tag_guard, Side};
+use crate::{tag_guard, Side, util::{extract_datetime_string, extract_datetime, extract_value_and_parse}};
 
 use serde::{Deserialize, Serialize};
 
@@ -26,10 +26,9 @@ pub struct LegPrice {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
     pub match_id: String,
-    pub occurred_at_cross: i64,
+    pub occurred_at_cross: String,
     pub order_book_id: u64,
     pub quantity: i64,
-    pub side: Side,
     pub trade_price: i64,
 }
 
@@ -38,10 +37,9 @@ impl_message! {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
     pub match_id: String,
-    pub occurred_at_cross: i64,
+    pub occurred_at_cross: String,
     pub order_book_id: u64,
     pub quantity: i64,
-    pub side: Side,
     pub trade_price: i64,
 }
 
@@ -50,14 +48,18 @@ impl TryFrom<&str> for LegPrice {
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('P', s);
         let mut iter = s.split(",").skip(1);
-        let timestamp = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let combo_group_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let timestamp = extract_datetime(iter.next().ok_or(())?).unwrap();
         let match_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let occurred_at_cross = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let order_book_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let combo_group_id = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let _side = iter.next();
         let quantity = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let side = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let order_book_id = extract_value_and_parse(iter.next().ok_or(())?).unwrap();
         let trade_price = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        iter.next(); 
+        iter.next(); 
+        iter.next();
+        let occurred_at_cross = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        
         Ok(Self {
             timestamp,
             combo_group_id,
@@ -65,7 +67,6 @@ impl TryFrom<&str> for LegPrice {
             occurred_at_cross,
             order_book_id,
             quantity,
-            side,
             trade_price,
         })
     }

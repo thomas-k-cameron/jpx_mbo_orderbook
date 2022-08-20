@@ -93,6 +93,9 @@ pub fn order_book_runtime<A>(
         }
     };
     for (timestamp, stack) in key_as_timestamp {
+        if callback.stop() {
+            break;
+        }
         // sort stack
         callback.timeframe_start(order_book_map, &timestamp, &stack[..]);
         // pre processing
@@ -116,14 +119,19 @@ pub fn order_book_runtime<A>(
                 // this one creates order book
                 MessageEnum::ProductInfo(info) => {
                     let order_book_id = info.order_book_id;
-                    order_book_map.insert(order_book_id, OrderBook::new(info));
+                    let check = order_book_map.insert(order_book_id, OrderBook::new(info));
+                    assert!(check.is_none(), "{} => {:?}", order_book_id, check.unwrap().product_info);
                 }
                 // order book meta data update
                 MessageEnum::TradingStatusInfo(msg) => {
-                    order_book_map
-                        .get_mut(&msg.order_book_id)
-                        .expect(&err_msg(msg.order_book_id, &msg))
-                        .set_trading_status(&msg);
+                    let book = order_book_map
+                        .get_mut(&msg.order_book_id);
+                        
+                    if let Some(book) = book {
+                        book.set_trading_status(&msg);
+                    } else {
+                        println!("{}", err_msg(msg.order_book_id, &msg));
+                    };
                 }
                 MessageEnum::TickSize(msg) => {
                     order_book_map
@@ -132,10 +140,14 @@ pub fn order_book_runtime<A>(
                         .append_l(msg);
                 }
                 MessageEnum::EquilibriumPrice(msg) => {
-                    order_book_map
-                        .get_mut(&msg.order_book_id)
-                        .expect(&err_msg(msg.order_book_id, &msg))
-                        .set_last_equilibrium_price(msg);
+                    let check = order_book_map
+                        .get_mut(&msg.order_book_id);
+
+                    if let Some(book) = check {
+                        book.set_last_equilibrium_price(msg);
+                    } else {
+                        println!("{}", err_msg(msg.order_book_id, &msg));
+                    }
                 }
                 // order CRUD. New order insertion, deletion, execution (reduction of order qty)
                 MessageEnum::AddOrder(msg) => {
@@ -171,8 +183,12 @@ pub fn order_book_runtime<A>(
                     executed_with_price_info.push(item);
                 }
                 // things that I don't know what to do with
-                MessageEnum::CombinationProduct(_msg) => {
-                    //msg.
+                MessageEnum::CombinationProduct(msg) => {
+                    if let Some(book) = order_book_map.get_mut(&msg.combination_order_book_id) {
+                        book.set_combination_orderbook(msg)
+                    } else {
+                        unreachable!("{} => {:?}", msg.combination_order_book_id, msg);
+                    }
                 }
                 MessageEnum::LegPrice(msg) => {
                     //msg.

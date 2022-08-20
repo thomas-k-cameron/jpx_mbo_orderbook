@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, naive::MAX_DATETIME};
 
 use crate::{
     AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
@@ -11,6 +11,7 @@ pub struct OrderBook {
     ///
     /// 銘柄基本情報
     pub product_info: ProductInfo,
+    pub combination_product_info: Vec<CombinationProduct>,
     pub legs: Vec<CombinationProduct>,
     ///
     /// tick info
@@ -36,11 +37,14 @@ pub struct PriceLevelView {
     pub qty: i64
 }
 
+const TIMESTAMP_DEFAULT_NAIVEDATETIME: NaiveDateTime = MAX_DATETIME;
+
 impl OrderBook {
     /// creates new orderbook with ProductInfo
     pub fn new(r: ProductInfo) -> Self {
         Self {
             product_info: r,
+            combination_product_info: vec![],
             legs: vec![],
             tick_info: Vec::with_capacity(5),
             orders: HashMap::new(),
@@ -49,6 +53,10 @@ impl OrderBook {
             equibrium_price: None,
             trading_status: None,
         }
+    }
+
+    pub fn set_combination_orderbook(&mut self, m: CombinationProduct) {
+        self.combination_product_info.push(m);
     }
 
     /// fetches a single order from OrderBook

@@ -45,8 +45,8 @@ impl FromStr for Side {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "B" | "57" => Ok(Side::Buy),
-            "S" | "56" => Ok(Side::Sell),
+            "B" | "66" => Ok(Side::Buy),
+            "S" | "67" => Ok(Side::Sell),
             _ => Err(()),
         }
     }
