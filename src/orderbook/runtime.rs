@@ -3,7 +3,7 @@ use std::{
     fmt::Debug,
 };
 
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, naive};
 
 use crate::MessageEnum;
 use crate::{datatypes::*, OrderBook};
@@ -106,7 +106,7 @@ pub fn order_book_runtime<A>(
         let mut executed_with_price_info = vec![];
         // stacks put order retrieved after `DeleteOrder` message is handled
         let mut deletion = vec![];
-
+        
         for msg in stack {
             if callback.stop() {
                 break;
@@ -120,7 +120,22 @@ pub fn order_book_runtime<A>(
                 MessageEnum::ProductInfo(info) => {
                     let order_book_id = info.order_book_id;
                     let check = order_book_map.insert(order_book_id, OrderBook::new(info));
-                    assert!(check.is_none(), "{} => {:?}", order_book_id, check.unwrap().product_info);
+                    match check {
+                        Some(ob) => {
+                            // check if the product_info is pointing at the same instrument
+                            let mut i1 = ob.product_info.clone();
+                            let mut i2 = order_book_map.get(&ob.order_book_id()).unwrap().product_info.clone();
+                            i1.timestamp = naive::MAX_DATETIME;
+                            i2.timestamp = naive::MAX_DATETIME;
+                            // put it back if it is the same.
+                            if i1 == i2 {
+                                order_book_map.insert(order_book_id, ob);
+                            } else {
+                                unimplemented!("{:#?}", (&i1, &i2));
+                            };
+                        }
+                        None => ()// ok!
+                    }
                 }
                 // order book meta data update
                 MessageEnum::TradingStatusInfo(msg) => {
