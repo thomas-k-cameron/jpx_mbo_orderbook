@@ -1,5 +1,3 @@
-use chrono::{NaiveDateTime, naive::MAX_DATETIME};
-
 use crate::{
     AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
     ProductInfo, Side, TickSize, TradingStatusInfo,
@@ -36,8 +34,6 @@ pub struct PriceLevelView {
     pub price: i64,
     pub qty: i64
 }
-
-const TIMESTAMP_DEFAULT_NAIVEDATETIME: NaiveDateTime = MAX_DATETIME;
 
 impl OrderBook {
     /// creates new orderbook with ProductInfo
@@ -77,7 +73,7 @@ impl OrderBook {
         None
     }
 
-    pub fn price_qty_at(&self, price: i64, qty: i64, side: Side) -> Option<PriceLevelView> {
+    pub fn price_qty_at(&self, price: i64, side: Side) -> Option<PriceLevelView> {
         let half = match side {
             Side::Buy => &self.bid,
             Side::Sell => &self.ask
