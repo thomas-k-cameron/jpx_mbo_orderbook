@@ -5,6 +5,9 @@ pub(crate) mod from_btree;
 mod symbol;
 pub use symbol::Symbol;
 
+mod unique_id;
+pub use unique_id::UniqueId;
+
 mod a;
 pub use a::AddOrder;
 mod c;
