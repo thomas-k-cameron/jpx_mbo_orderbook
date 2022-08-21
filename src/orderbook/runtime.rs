@@ -3,7 +3,7 @@ use std::{
     fmt::Debug,
 };
 
-use chrono::{naive, NaiveDateTime, MAX_DATETIME};
+use chrono::{naive, NaiveDateTime};
 
 use crate::MessageEnum;
 use crate::{datatypes::*, OrderBook};
@@ -251,9 +251,9 @@ pub fn order_book_runtime<A>(
                             opts.2.replace(add_order.clone());
                         });
                     }
-
                     // deletion
                     let item = OrderDeletion {
+                        is_order_modified: modified_order_id_map.contains_key(&id),
                         deleted_order: add_order,
                         msg,
                     };
