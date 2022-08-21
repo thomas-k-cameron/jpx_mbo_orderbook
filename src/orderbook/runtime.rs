@@ -161,7 +161,7 @@ pub fn order_book_runtime<A>(
                     if let Some(book) = check {
                         book.set_last_equilibrium_price(msg);
                     } else {
-                        println!("{}", err_msg(msg.order_book_id, &msg));
+                        eprintln!("{}", err_msg(msg.order_book_id, &msg));
                     }
                 }
                 // order CRUD. New order insertion, deletion, execution (reduction of order qty)
