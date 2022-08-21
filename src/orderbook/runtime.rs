@@ -3,7 +3,7 @@ use std::{
     fmt::Debug,
 };
 
-use chrono::{NaiveDateTime};
+use chrono::{NaiveDateTime, naive, MAX_DATETIME};
 
 use crate::MessageEnum;
 use crate::{datatypes::*, OrderBook};
@@ -125,8 +125,8 @@ pub fn order_book_runtime<A>(
                             // check if the product_info is pointing at the same instrument
                             let mut i1 = ob.product_info.clone();
                             let mut i2 = order_book_map.get(&ob.order_book_id()).unwrap().product_info.clone();
-                            i1.timestamp = NaiveDateTime::MAX;
-                            i2.timestamp = NaiveDateTime::MAX;
+                            i1.timestamp = naive::MAX_DATETIME;
+                            i2.timestamp = naive::MAX_DATETIME;
                             // put it back if it is the same.
                             if i1 == i2 {
                                 order_book_map.insert(order_book_id, ob);
