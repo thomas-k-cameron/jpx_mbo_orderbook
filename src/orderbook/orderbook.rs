@@ -2,7 +2,7 @@ use crate::{
     AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
     ProductInfo, Side, TickSize, TradingStatusInfo,
 };
-use std::collections::{BTreeMap, HashMap};
+use std::{collections::{BTreeMap, HashMap}, ops::RangeBounds};
 
 #[derive(Debug)]
 pub struct OrderBook {
@@ -73,7 +73,7 @@ impl OrderBook {
         None
     }
 
-    pub fn price_qty_at(&self, price: i64, side: Side) -> Option<PriceLevelView> {
+    pub fn qty_at_price(&self, price: i64, side: Side) -> Option<PriceLevelView> {
         let half = match side {
             Side::Buy => &self.bid,
             Side::Sell => &self.ask
@@ -88,6 +88,24 @@ impl OrderBook {
             opts.replace(v);
         }
         opts
+    }
+
+    pub fn qty_at_price_range(&self, price_range: impl RangeBounds<i64>, side: Side) -> Vec<PriceLevelView> {
+        let half = match side {
+            Side::Buy => &self.bid,
+            Side::Sell => &self.ask
+        };
+
+        let mut stack = vec![];
+        for (i, tree) in half.range(price_range) {
+            let qty = tree.iter().fold(0, |qty, (_, add)| qty + add.quantity);
+            let v = PriceLevelView {
+                qty,
+                price: *i
+            };
+            stack.push(v)
+        }
+        stack
     }
 
     pub fn best_bid(&self) -> Option<PriceLevelView> {
