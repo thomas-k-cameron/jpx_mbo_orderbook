@@ -27,7 +27,6 @@ impl UniqueId {
     }
 }
 
-
 impl<'a> TryFrom<&'a AddOrder> for UniqueId {
     type Error = Infallible;
     fn try_from(a: &'a AddOrder) -> Result<Self, Infallible> {

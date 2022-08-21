@@ -1,5 +1,8 @@
 // automatically generated
-use crate::{tag_guard, util::{extract_datetime, extract_value_and_parse}};
+use crate::{
+    tag_guard,
+    util::{extract_datetime, extract_value_and_parse},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -55,11 +58,11 @@ impl TryFrom<&str> for LegPrice {
         let quantity = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
         let order_book_id = extract_value_and_parse(iter.next().ok_or(())?).unwrap();
         let trade_price = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        iter.next(); 
-        iter.next(); 
+        iter.next();
+        iter.next();
         iter.next();
         let occurred_at_cross = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        
+
         Ok(Self {
             timestamp,
             combo_group_id,
