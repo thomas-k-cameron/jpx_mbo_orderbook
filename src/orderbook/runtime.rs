@@ -1,9 +1,9 @@
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, HashMap, HashSet},
     fmt::Debug,
 };
 
-use chrono::{NaiveDateTime, naive, MAX_DATETIME};
+use chrono::{naive, NaiveDateTime, MAX_DATETIME};
 
 use crate::MessageEnum;
 use crate::{datatypes::*, OrderBook};
@@ -43,7 +43,13 @@ pub trait OrderBookRunTimeCallback {
     #[allow(unused_variables)]
     #[inline]
     /// called only when `E` tag message was received
-    fn executions(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime, executions: Vec<OrderExecution>) {}
+    fn executions(
+        &mut self,
+        order_book_map: &mut HashMap<u64, OrderBook>,
+        timestamp: &NaiveDateTime,
+        executions: Vec<OrderExecution>,
+    ) {
+    }
 
     #[allow(unused_variables)]
     #[inline]
@@ -59,7 +65,25 @@ pub trait OrderBookRunTimeCallback {
     #[allow(unused_variables)]
     #[inline]
     /// called only when `D` tag message was received
-    fn deletions(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, timestamp: &NaiveDateTime, deletion: Vec<OrderDeletion>) {}
+    fn deletions(
+        &mut self,
+        order_book_map: &mut HashMap<u64, OrderBook>,
+        timestamp: &NaiveDateTime,
+        deletion: Vec<OrderDeletion>,
+    ) {
+    }
+
+    #[allow(unused_variables)]
+    #[inline]
+    /// called when order(s) are modified  
+    /// modified orders are detected when message with d tag and a tag refers to the same unique_id
+    fn modified_orders(
+        &mut self,
+        order_book_map: &mut HashMap<u64, OrderBook>,
+        timestamp: &NaiveDateTime,
+        modified_orders: Vec<ModifiedOrder>,
+    ) {
+    }
 
     #[allow(unused_variables)]
     #[inline]
@@ -106,7 +130,40 @@ pub fn order_book_runtime<A>(
         let mut executed_with_price_info = vec![];
         // stacks put order retrieved after `DeleteOrder` message is handled
         let mut deletion = vec![];
-        
+
+        let mut modified_order_id_map = {
+            let mut add_set = HashSet::new();
+            let mut del_set = HashSet::new();
+
+            for i in stack.iter() {
+                match i {
+                    MessageEnum::AddOrder(add) => {
+                        let id = UniqueId::from_add_order(add);
+                        add_set.insert(id);
+                    }
+                    MessageEnum::DeleteOrder(del) => {
+                        let id = UniqueId::from_delete_order(del);
+                        del_set.insert(id);
+                    }
+                    _ => (),
+                }
+            }
+
+            let (longer, shorter) = if add_set.len() > del_set.len() {
+                (add_set, del_set)
+            } else {
+                (del_set, add_set)
+            };
+
+            let mut modified_orders_map = HashMap::new();
+            for id in longer {
+                if shorter.contains(&id) {
+                    modified_orders_map.insert(id, (None, None, None));
+                }
+            }
+            modified_orders_map
+        };
+
         for msg in stack {
             if callback.stop() {
                 break;
@@ -124,7 +181,11 @@ pub fn order_book_runtime<A>(
                         Some(ob) => {
                             // check if the product_info is pointing at the same instrument
                             let mut i1 = ob.product_info.clone();
-                            let mut i2 = order_book_map.get(&ob.order_book_id()).unwrap().product_info.clone();
+                            let mut i2 = order_book_map
+                                .get(&ob.order_book_id())
+                                .unwrap()
+                                .product_info
+                                .clone();
                             i1.timestamp = naive::MAX_DATETIME;
                             i2.timestamp = naive::MAX_DATETIME;
                             // put it back if it is the same.
@@ -134,14 +195,13 @@ pub fn order_book_runtime<A>(
                                 unimplemented!("{:#?}", (&i1, &i2));
                             };
                         }
-                        None => ()// ok!
+                        None => (), // ok!
                     }
                 }
                 // order book meta data update
                 MessageEnum::TradingStatusInfo(msg) => {
-                    let book = order_book_map
-                        .get_mut(&msg.order_book_id);
-                        
+                    let book = order_book_map.get_mut(&msg.order_book_id);
+
                     if let Some(book) = book {
                         book.set_trading_status(&msg);
                     } else {
@@ -155,8 +215,7 @@ pub fn order_book_runtime<A>(
                         .append_l(msg);
                 }
                 MessageEnum::EquilibriumPrice(msg) => {
-                    let check = order_book_map
-                        .get_mut(&msg.order_book_id);
+                    let check = order_book_map.get_mut(&msg.order_book_id);
 
                     if let Some(book) = check {
                         book.set_last_equilibrium_price(msg);
@@ -166,18 +225,38 @@ pub fn order_book_runtime<A>(
                 }
                 // order CRUD. New order insertion, deletion, execution (reduction of order qty)
                 MessageEnum::AddOrder(msg) => {
+                    let id = (&msg).try_into().unwrap();
+                    if modified_order_id_map.contains_key(&id) {
+                        modified_order_id_map.entry(id).and_modify(|opts| {
+                            opts.0.replace(msg.clone());
+                        });
+                    }
                     order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .put(msg);
                 }
                 MessageEnum::DeleteOrder(msg) => {
+                    // original add order
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .delete(&msg);
 
-                    let item = OrderDeletion { deleted_order: add_order, msg };
+                    // modify
+                    let id = (&msg).try_into().unwrap();
+                    if modified_order_id_map.contains_key(&id) {
+                        modified_order_id_map.entry(id).and_modify(|opts| {
+                            opts.1.replace(msg.clone());
+                            opts.2.replace(add_order.clone());
+                        });
+                    }
+
+                    // deletion
+                    let item = OrderDeletion {
+                        deleted_order: add_order,
+                        msg,
+                    };
                     deletion.push(item);
                 }
                 MessageEnum::Executed(msg) => {
@@ -185,7 +264,10 @@ pub fn order_book_runtime<A>(
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .executed(&msg);
-                    let item = OrderExecution { matched_order_after_execution: add_order, msg };
+                    let item = OrderExecution {
+                        matched_order_after_execution: add_order,
+                        msg,
+                    };
                     executions.push(item);
                 }
                 MessageEnum::ExecutionWithPriceInfo(msg) => {
@@ -194,7 +276,10 @@ pub fn order_book_runtime<A>(
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .c_executed(&msg);
 
-                    let item = OrderExecutionWithPriceInfo { matched_order_after_execution: add_order, msg };
+                    let item = OrderExecutionWithPriceInfo {
+                        matched_order_after_execution: add_order,
+                        msg,
+                    };
                     executed_with_price_info.push(item);
                 }
                 // things that I don't know what to do with
@@ -228,6 +313,26 @@ pub fn order_book_runtime<A>(
 
         if deletion.len() > 0 {
             callback.deletions(order_book_map, &timestamp, deletion);
+        }
+
+        if modified_order_id_map.len() > 0 {
+            let mut modified_orders = vec![];
+            for (id, tup) in modified_order_id_map {
+                let (modify_msg, delete_msg, previous_add_order) = tup;
+                let (modify_msg, delete_msg, previous_add_order) = (
+                    modify_msg.unwrap(),
+                    delete_msg.unwrap(),
+                    previous_add_order.unwrap(),
+                );
+                let ord = ModifiedOrder {
+                    id,
+                    modify_msg,
+                    delete_msg,
+                    previous_add_order,
+                };
+                modified_orders.push(ord);
+            }
+            callback.modified_orders(order_book_map, &timestamp, modified_orders);
         }
 
         // post processing
