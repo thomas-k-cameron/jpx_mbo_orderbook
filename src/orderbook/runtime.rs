@@ -250,14 +250,14 @@ pub fn order_book_runtime<A>(
                             opts.1.replace(msg.clone());
                             opts.2.replace(add_order.clone());
                         });
+                    } else {
+                        // deletion
+                        let item = OrderDeletion {
+                            deleted_order: add_order,
+                            msg,
+                        };
+                        deletion.push(item);
                     }
-                    // deletion
-                    let item = OrderDeletion {
-                        is_order_modified: modified_order_id_map.contains_key(&id),
-                        deleted_order: add_order,
-                        msg,
-                    };
-                    deletion.push(item);
                 }
                 MessageEnum::Executed(msg) => {
                     let add_order = order_book_map

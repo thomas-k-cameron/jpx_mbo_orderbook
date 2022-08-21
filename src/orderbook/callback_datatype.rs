@@ -10,11 +10,8 @@ pub struct OrderExecutionWithPriceInfo {
     pub msg: ExecutionWithPriceInfo,
 }
 
+/// struct for order that were deleted
 pub struct OrderDeletion {
-    /// indicates that delete tag was issued in conjunction with add order
-    /// meaning that order was modified, instead of actually leaving the orderbook
-    /// it went to another price level.
-    pub is_order_modified: bool,
     pub deleted_order: AddOrder,
     pub msg: DeleteOrder,
 }
