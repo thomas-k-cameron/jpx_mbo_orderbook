@@ -2,7 +2,10 @@ use crate::{
     AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
     ProductInfo, Side, TickSize, TradingStatusInfo,
 };
-use std::{collections::{BTreeMap, HashMap}, ops::RangeBounds};
+use std::{
+    collections::{BTreeMap, HashMap},
+    ops::RangeBounds,
+};
 
 #[derive(Debug)]
 pub struct OrderBook {
@@ -32,7 +35,7 @@ pub struct OrderBook {
 pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, AddOrder>>;
 pub struct PriceLevelView {
     pub price: i64,
-    pub qty: i64
+    pub qty: i64,
 }
 
 impl OrderBook {
@@ -76,33 +79,31 @@ impl OrderBook {
     pub fn qty_at_price(&self, price: i64, side: Side) -> Option<PriceLevelView> {
         let half = match side {
             Side::Buy => &self.bid,
-            Side::Sell => &self.ask
+            Side::Sell => &self.ask,
         };
         let mut opts = None;
         for i in half.get(&price) {
             let qty = i.iter().fold(0, |qty, (_, add)| qty + add.quantity);
-            let v = PriceLevelView {
-                qty,
-                price
-            };
+            let v = PriceLevelView { qty, price };
             opts.replace(v);
         }
         opts
     }
 
-    pub fn qty_at_price_range(&self, price_range: impl RangeBounds<i64>, side: Side) -> Vec<PriceLevelView> {
+    pub fn qty_at_price_range(
+        &self,
+        price_range: impl RangeBounds<i64>,
+        side: Side,
+    ) -> Vec<PriceLevelView> {
         let half = match side {
             Side::Buy => &self.bid,
-            Side::Sell => &self.ask
+            Side::Sell => &self.ask,
         };
 
         let mut stack = vec![];
         for (i, tree) in half.range(price_range) {
             let qty = tree.iter().fold(0, |qty, (_, add)| qty + add.quantity);
-            let v = PriceLevelView {
-                qty,
-                price: *i
-            };
+            let v = PriceLevelView { qty, price: *i };
             stack.push(v)
         }
         stack
@@ -113,7 +114,7 @@ impl OrderBook {
         if let Some((price, val)) = self.bid.iter().next_back() {
             let v = PriceLevelView {
                 price: *price,
-                qty: val.iter().fold(0, |qty, (_, add)| qty + add.quantity)
+                qty: val.iter().fold(0, |qty, (_, add)| qty + add.quantity),
             };
             opts.replace(v);
         };
@@ -126,7 +127,7 @@ impl OrderBook {
         if let Some((price, val)) = self.ask.iter().next() {
             let v = PriceLevelView {
                 price: *price,
-                qty: val.iter().fold(0, |qty, (_, add)| qty + add.quantity)
+                qty: val.iter().fold(0, |qty, (_, add)| qty + add.quantity),
             };
             opts.replace(v);
         };
@@ -147,7 +148,7 @@ impl OrderBook {
     pub fn qty(&self, price: i64, side: Side) -> Option<i64> {
         let book = match side {
             Side::Buy => &self.bid,
-            Side::Sell => &self.ask
+            Side::Sell => &self.ask,
         };
         for i in book.get(&price) {
             return Some(i.iter().fold(0, |a, (_, b)| a + b.quantity));
