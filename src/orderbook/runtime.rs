@@ -4,6 +4,7 @@ use std::{
 };
 
 use chrono::{naive, NaiveDateTime};
+use tokio::{io::{BufReader, AsyncBufReadExt}, fs::File};
 
 use crate::MessageEnum;
 use crate::{datatypes::*, OrderBook};
@@ -358,6 +359,29 @@ pub fn from_raw_file(file: String) -> ParseResult {
         }
     }
 
+    ParseResult { itch, unknown }
+}
+
+pub async fn from_filepath(filepath: &str) -> ParseResult {
+    let mut itch = BTreeMap::new();
+    let mut unknown = vec![];
+    let mut lines = {
+        let file = File::open(filepath).await.unwrap();
+        BufReader::new(file).lines()
+    };
+    while let Ok(Some(line)) = lines.next_line().await {
+        match MessageEnum::try_from(line) {
+            Ok(i) => {
+                if let Some(list) = itch.get_mut(&i.timestamp()) {
+                    let list: &mut Vec<MessageEnum> = list;
+                    list.push(i);
+                } else {
+                    itch.insert(i.timestamp(), vec![i]);
+                };
+            }
+            Err(e) => unknown.push(e),
+        }
+    }
     ParseResult { itch, unknown }
 }
 
