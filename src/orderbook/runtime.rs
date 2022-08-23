@@ -1,6 +1,6 @@
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
-    fmt::Debug,
+    fmt::Debug, path::Path,
 };
 
 use chrono::{naive, NaiveDateTime};
@@ -362,7 +362,7 @@ pub fn from_raw_file(file: String) -> ParseResult {
     ParseResult { itch, unknown }
 }
 
-pub async fn from_filepath(filepath: &str) -> ParseResult {
+pub async fn from_filepath(filepath: impl AsRef<Path>) -> ParseResult {
     let mut itch = BTreeMap::new();
     let mut unknown = vec![];
     let mut lines = {
