@@ -16,7 +16,7 @@ pub trait OrderBookRunTimeCallback {
     fn stop(&mut self) -> bool {
         false
     }
-    
+
     #[allow(unused_variables)]
     #[inline]
     fn timeframe_start(
@@ -163,7 +163,7 @@ pub fn order_book_runtime<A>(
             if callback.stop() {
                 break;
             }
-            callback.pre_message(order_book_map, &msg);
+
             match msg {
                 MessageEnum::SecondTag(_msg) => {
                     // do nothing
@@ -295,7 +295,6 @@ pub fn order_book_runtime<A>(
                     //
                 }
             };
-            callback.after_message(order_book_map);
         }
 
         if executions.len() > 0 {
