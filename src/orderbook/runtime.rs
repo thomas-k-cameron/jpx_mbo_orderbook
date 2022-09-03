@@ -32,6 +32,7 @@ pub trait OrderBookRunTimeCallback {
         &mut self,
         order_book_map: &mut HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
+        stack: &[MessageEnum],
     ) {
     }
 
@@ -159,7 +160,7 @@ pub fn order_book_runtime<A>(
             modified_orders_map
         };
 
-        for msg in stack {
+        for msg in stack.clone() {
             if callback.stop() {
                 break;
             }
@@ -330,7 +331,7 @@ pub fn order_book_runtime<A>(
         }
 
         // post processing
-        callback.event_end(order_book_map, &timestamp);
+        callback.event_end(order_book_map, &timestamp, &stack[..]);
     }
     callback.all_done(order_book_map, &ts);
 }
