@@ -21,7 +21,7 @@ use crate::OrderBookRunTimeCallback;
 pub struct TestSpread;
 
 impl OrderBookRunTimeCallback for TestSpread {
-    fn timeframe_end(
+    fn event_end(
         &mut self,
         order_book_map: &mut std::collections::HashMap<u64, crate::OrderBook>,
         timestamp: &chrono::NaiveDateTime,

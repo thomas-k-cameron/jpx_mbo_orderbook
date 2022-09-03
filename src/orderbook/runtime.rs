@@ -19,7 +19,7 @@ pub trait OrderBookRunTimeCallback {
 
     #[allow(unused_variables)]
     #[inline]
-    fn timeframe_start(
+    fn event_start(
         &mut self,
         order_book_map: &mut HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
@@ -28,7 +28,7 @@ pub trait OrderBookRunTimeCallback {
     }
     #[allow(unused_variables)]
     #[inline]
-    fn timeframe_end(
+    fn event_end(
         &mut self,
         order_book_map: &mut HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
@@ -116,7 +116,7 @@ pub fn order_book_runtime<A>(
             break;
         }
         // sort stack
-        callback.timeframe_start(order_book_map, &timestamp, &stack[..]);
+        callback.event_start(order_book_map, &timestamp, &stack[..]);
         // pre processing
 
         // stacks put order retrieved after `Executed` message  is handled
@@ -330,7 +330,7 @@ pub fn order_book_runtime<A>(
         }
 
         // post processing
-        callback.timeframe_end(order_book_map, &timestamp);
+        callback.event_end(order_book_map, &timestamp);
     }
     callback.all_done(order_book_map, &ts);
 }
