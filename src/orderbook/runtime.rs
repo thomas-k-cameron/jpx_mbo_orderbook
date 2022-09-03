@@ -16,13 +16,7 @@ pub trait OrderBookRunTimeCallback {
     fn stop(&mut self) -> bool {
         false
     }
-    /// executes
-    #[allow(unused_variables)]
-    #[inline]
-    fn pre_message(&mut self, order_book_map: &mut HashMap<u64, OrderBook>, msg: &MessageEnum) {}
-    #[allow(unused_variables)]
-    #[inline]
-    fn after_message(&mut self, order_book_map: &mut HashMap<u64, OrderBook>) {}
+    
     #[allow(unused_variables)]
     #[inline]
     fn timeframe_start(
