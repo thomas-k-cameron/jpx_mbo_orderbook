@@ -33,6 +33,7 @@ pub struct OrderBook {
 }
 
 pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, AddOrder>>;
+#[derive(Debug)]
 pub struct PriceLevelView {
     pub price: i64,
     pub qty: i64,
