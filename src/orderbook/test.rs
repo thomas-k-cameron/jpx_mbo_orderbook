@@ -1,4 +1,4 @@
-use crate::order_book_runtime;
+use crate::{order_book_runtime, MessageEnum};
 
 use super::runtime::from_raw_file;
 use std::collections::HashMap;
@@ -25,6 +25,7 @@ impl OrderBookRunTimeCallback for TestSpread {
         &mut self,
         order_book_map: &mut std::collections::HashMap<u64, crate::OrderBook>,
         timestamp: &chrono::NaiveDateTime,
+        _: &[MessageEnum],
     ) {
         for (_id, book) in order_book_map {
             let mut ask_qty = None;

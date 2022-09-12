@@ -1,10 +1,14 @@
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
-    fmt::Debug, path::Path,
+    fmt::Debug,
+    path::Path,
 };
 
 use chrono::{naive, NaiveDateTime};
-use tokio::{io::{BufReader, AsyncBufReadExt}, fs::File};
+use tokio::{
+    fs::File,
+    io::{AsyncBufReadExt, BufReader},
+};
 
 use crate::MessageEnum;
 use crate::{datatypes::*, OrderBook};
@@ -34,6 +38,17 @@ pub trait OrderBookRunTimeCallback {
         timestamp: &NaiveDateTime,
         stack: &[MessageEnum],
     ) {
+    }
+
+    #[allow(unused_variables)]
+    #[inline]
+    fn order_book_id_with_changes(
+        &mut self,
+        order_book_map: &HashMap<u64, OrderBook>,
+        timestamp: &NaiveDateTime,
+        changes: &HashSet<u64>,
+    ) {
+
     }
 
     #[allow(unused_variables)]
@@ -112,10 +127,14 @@ pub fn order_book_runtime<A>(
             return;
         }
     };
+
+    // list of all order book id who had something changes to price levels
+    let mut changes = HashSet::new();
     for (timestamp, stack) in key_as_timestamp {
         if callback.stop() {
             break;
         }
+        changes.clear();
         // sort stack
         callback.event_start(order_book_map, &timestamp, &stack[..]);
         // pre processing
@@ -221,6 +240,7 @@ pub fn order_book_runtime<A>(
                 }
                 // order CRUD. New order insertion, deletion, execution (reduction of order qty)
                 MessageEnum::AddOrder(msg) => {
+                    changes.insert(msg.order_book_id);
                     let id = (&msg).try_into().unwrap();
                     if modified_order_id_map.contains_key(&id) {
                         modified_order_id_map.entry(id).and_modify(|opts| {
@@ -233,6 +253,7 @@ pub fn order_book_runtime<A>(
                         .put(msg);
                 }
                 MessageEnum::DeleteOrder(msg) => {
+                    changes.insert(msg.order_book_id);
                     // original add order
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
@@ -256,6 +277,7 @@ pub fn order_book_runtime<A>(
                     }
                 }
                 MessageEnum::Executed(msg) => {
+                    changes.insert(msg.order_book_id);
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
@@ -267,6 +289,7 @@ pub fn order_book_runtime<A>(
                     executions.push(item);
                 }
                 MessageEnum::ExecutionWithPriceInfo(msg) => {
+                    changes.insert(msg.order_book_id);
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
@@ -308,6 +331,10 @@ pub fn order_book_runtime<A>(
 
         if deletion.len() > 0 {
             callback.deletions(order_book_map, &timestamp, deletion);
+        }
+
+        if changes.len() > 0 {
+            callback.order_book_id_with_changes(order_book_map, &timestamp, &changes);
         }
 
         if modified_order_id_map.len() > 0 {

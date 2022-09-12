@@ -1,3 +1,5 @@
+use serde::{Serialize, Deserialize};
+
 use crate::{
     AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
     ProductInfo, Side, TickSize, TradingStatusInfo,
@@ -33,7 +35,7 @@ pub struct OrderBook {
 }
 
 pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, AddOrder>>;
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PriceLevelView {
     pub price: i64,
     pub qty: i64,
