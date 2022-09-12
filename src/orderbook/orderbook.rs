@@ -32,6 +32,7 @@ pub struct OrderBook {
 
     pub equibrium_price: Option<EquilibriumPrice>,
     pub trading_status: Option<String>,
+    pub last_executed_price: Option<i64>,
 }
 
 pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, AddOrder>>;
@@ -54,6 +55,7 @@ impl OrderBook {
             bid: BTreeMap::new(),
             equibrium_price: None,
             trading_status: None,
+            last_executed_price: Some(0),
         }
     }
 
@@ -113,29 +115,27 @@ impl OrderBook {
     }
 
     pub fn best_bid(&self) -> Option<PriceLevelView> {
-        let mut opts = None;
         if let Some((price, val)) = self.bid.iter().next_back() {
             let v = PriceLevelView {
                 price: *price,
                 qty: val.iter().fold(0, |qty, (_, add)| qty + add.quantity),
             };
-            opts.replace(v);
-        };
-
-        opts
+            Some(v)
+        } else {
+            None
+        }
     }
 
     pub fn best_ask(&self) -> Option<PriceLevelView> {
-        let mut opts = None;
         if let Some((price, val)) = self.ask.iter().next() {
             let v = PriceLevelView {
                 price: *price,
                 qty: val.iter().fold(0, |qty, (_, add)| qty + add.quantity),
             };
-            opts.replace(v);
-        };
-
-        opts
+            Some(v)
+        } else {
+            None
+        }
     }
 
     /// returns order_book_id
@@ -143,7 +143,7 @@ impl OrderBook {
         self.product_info.order_book_id
     }
 
-    // append l message. This message contains information about tick size
+    /// append l message. This message contains information about tick size
     pub fn append_l(&mut self, l: TickSize) {
         self.tick_info.push(l);
     }
@@ -235,7 +235,7 @@ impl OrderBook {
         } else {
             unreachable!("{}", func_e())
         };
-
+        self.last_executed_price = Some(price);
         let level = if let Some(l) = tree.get_mut(&price) {
             l
         } else {
@@ -260,7 +260,7 @@ impl OrderBook {
         if level.len() == 0 {
             tree.remove(&price);
         }
-
+        
         opts.unwrap()
     }
 
