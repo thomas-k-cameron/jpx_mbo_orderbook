@@ -201,8 +201,8 @@ pub fn order_book_runtime<A>(
                                 .unwrap()
                                 .product_info
                                 .clone();
-                            i1.timestamp = naive::MAX_DATETIME;
-                            i2.timestamp = naive::MAX_DATETIME;
+                            i1.timestamp = NaiveDateTime::MAX;
+                            i2.timestamp = NaiveDateTime::MAX;
                             // put it back if it is the same.
                             if i1 == i2 {
                                 order_book_map.insert(order_book_id, ob);
@@ -333,11 +333,7 @@ pub fn order_book_runtime<A>(
             callback.deletions(order_book_map, &timestamp, deletion);
         }
 
-        if changes.len() > 0 {
-            callback.order_book_id_with_changes(order_book_map, &timestamp, &changes);
-        }
-
-        if modified_order_id_map.len() > 0 {
+        if !modified_order_id_map.is_empty() {
             let mut modified_orders = vec![];
             for (id, tup) in modified_order_id_map {
                 let (modify_msg, delete_msg, previous_add_order) = tup;
@@ -355,6 +351,10 @@ pub fn order_book_runtime<A>(
                 modified_orders.push(ord);
             }
             callback.modified_orders(order_book_map, &timestamp, modified_orders);
+        }
+
+        if !changes.is_empty() {
+            callback.order_book_id_with_changes(order_book_map, &timestamp, &changes);
         }
 
         // post processing
