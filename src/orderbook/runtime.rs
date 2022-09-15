@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-use chrono::{naive, NaiveDateTime};
+use chrono::{NaiveDateTime};
 use tokio::{
     fs::File,
     io::{AsyncBufReadExt, BufReader},
@@ -16,7 +16,9 @@ use crate::{datatypes::*, OrderBook};
 use crate::callback_datatype::*;
 
 pub trait OrderBookRunTimeCallback {
-    // stops the runtime when true is returned
+
+    // stops the runtime when true is returned    
+    #[inline(always)]
     fn stop(&mut self) -> bool {
         false
     }
@@ -130,7 +132,7 @@ pub fn order_book_runtime<A>(
 
     // list of all order book id who had something changes to price levels
     let mut changes = HashSet::new();
-    for (timestamp, stack) in key_as_timestamp {
+    'outer: for (timestamp, stack) in key_as_timestamp {
         if callback.stop() {
             break;
         }
@@ -181,7 +183,7 @@ pub fn order_book_runtime<A>(
 
         for msg in stack.clone() {
             if callback.stop() {
-                break;
+                break 'outer;
             }
 
             match msg {
