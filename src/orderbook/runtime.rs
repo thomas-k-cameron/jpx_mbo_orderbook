@@ -103,14 +103,14 @@ pub trait OrderBookRunTimeCallback {
     fn all_done(
         &mut self,
         order_book_map: &mut HashMap<u64, OrderBook>,
-        timestamp: &NaiveDateTime,
+        timestamp: Option<NaiveDateTime>,
     ) {
     }
 }
 
 pub fn order_book_runtime<A>(
     order_book_map: &mut HashMap<u64, OrderBook>,
-    key_as_timestamp: BTreeMap<NaiveDateTime, Vec<MessageEnum>>,
+    mut key_as_timestamp: impl Iterator<Item = (NaiveDateTime, Vec<MessageEnum>)>,
     callback: &mut A,
 ) where
     A: OrderBookRunTimeCallback,
@@ -122,20 +122,15 @@ pub fn order_book_runtime<A>(
         )
     }
 
-    let ts = match key_as_timestamp.iter().last() {
-        Some((ts, _)) => *ts,
-        None => {
-            println!("no message received");
-            return;
-        }
-    };
+    let mut ts = None;
 
     // list of all order book id who had something changes to price levels
     let mut changes = HashSet::new();
-    'outer: for (timestamp, stack) in key_as_timestamp {
+    'outer: while let Some((timestamp, stack)) = key_as_timestamp.next() {
         if callback.stop() {
-            break;
+            break 'outer;
         }
+        ts.replace(timestamp);
         changes.clear();
         // sort stack
         callback.event_start(order_book_map, &timestamp, &stack[..]);
@@ -362,7 +357,8 @@ pub fn order_book_runtime<A>(
         // post processing
         callback.event_end(order_book_map, &timestamp, &stack[..]);
     }
-    callback.all_done(order_book_map, &ts);
+    
+    callback.all_done(order_book_map, ts);
 }
 
 pub fn from_raw_file(file: String) -> ParseResult {
