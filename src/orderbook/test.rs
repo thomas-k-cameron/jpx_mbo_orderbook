@@ -10,7 +10,7 @@ pub fn handle() {
     let stuff = from_raw_file(file);
     let mut map = HashMap::new();
     let mut analysis = TestSpread;
-    order_book_runtime(&mut map, stuff.itch, &mut analysis);
+    order_book_runtime(&mut map, stuff.itch.into_iter(), &mut analysis);
     for i in stuff.unknown {
         println!("{:?}", i);
     }
