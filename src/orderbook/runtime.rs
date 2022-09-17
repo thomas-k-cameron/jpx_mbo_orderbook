@@ -159,19 +159,11 @@ pub fn order_book_runtime<A>(
                     }
                     _ => (),
                 }
-            }
-
-            let (longer, shorter) = if add_set.len() > del_set.len() {
-                (add_set, del_set)
-            } else {
-                (del_set, add_set)
             };
 
             let mut modified_orders_map = HashMap::new();
-            for id in longer {
-                if shorter.contains(&id) {
-                    modified_orders_map.insert(id, (None, None, None));
-                }
+            for id in add_set.intersection(&del_set) {
+                modified_orders_map.insert(*id, (None, None, None));
             }
             modified_orders_map
         };
@@ -318,20 +310,20 @@ pub fn order_book_runtime<A>(
             };
         }
 
-        if executions.len() > 0 {
+        if !executions.is_empty() {
             callback.executions(order_book_map, &timestamp, executions);
         }
 
-        if executed_with_price_info.len() > 0 {
+        if !executed_with_price_info.is_empty() {
             callback.executed_with_price_info(order_book_map, &timestamp, executed_with_price_info);
         }
 
-        if deletion.len() > 0 {
+        if !deletion.is_empty() {
             callback.deletions(order_book_map, &timestamp, deletion);
         }
 
         if !modified_order_id_map.is_empty() {
-            let mut modified_orders = vec![];
+            let mut modified_orders = Vec::with_capacity(modified_order_id_map.len());
             for (id, tup) in modified_order_id_map {
                 let (modify_msg, delete_msg, previous_add_order) = tup;
                 let (modify_msg, delete_msg, previous_add_order) = (
@@ -339,6 +331,7 @@ pub fn order_book_runtime<A>(
                     delete_msg.unwrap(),
                     previous_add_order.unwrap(),
                 );
+                
                 let ord = ModifiedOrder {
                     id,
                     modify_msg,
@@ -388,6 +381,7 @@ pub async fn from_filepath(filepath: impl AsRef<Path>) -> ParseResult {
         let file = File::open(filepath).await.unwrap();
         BufReader::new(file).lines()
     };
+    
     while let Ok(Some(line)) = lines.next_line().await {
         match MessageEnum::try_from(line) {
             Ok(i) => {
