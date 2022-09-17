@@ -1,4 +1,6 @@
 #![allow(non_snake_case)]
+use std::str::FromStr;
+
 use crate::{
     AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
     LegPrice, ProductInfo, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
@@ -51,6 +53,18 @@ macro_rules! dclr_message_enum {
                     }
                 ) *
                 return Err(string)
+            }
+        }
+
+        impl FromStr for MessageEnum {
+            type Err = String;
+            fn from_str(string: &str) -> Result<Self, Self::Err> {
+                $(
+                    if let Ok(i) = $ident::try_from(string) {
+                        return Ok(MessageEnum::$ident(i))
+                    }
+                ) *
+                return Err(string.to_string())
             }
         }
 
