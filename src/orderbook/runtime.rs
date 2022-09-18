@@ -1,13 +1,13 @@
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt::Debug,
-    path::Path,
+    path::Path, thread, time::{SystemTime, Duration}, sync::mpsc::Receiver, 
 };
 
 use chrono::{NaiveDateTime};
 use tokio::{
     fs::File,
-    io::{AsyncBufReadExt, BufReader},
+    io::{AsyncBufReadExt, BufReader}, spawn, task::JoinHandle, runtime::Handle,
 };
 
 use crate::MessageEnum;
@@ -106,7 +106,20 @@ pub trait OrderBookRunTimeCallback {
         timestamp: Option<NaiveDateTime>,
     ) {
     }
+
+    #[allow(unused_variables)]
+    #[inline]
+    fn runtime_stats(&mut self, stats: RuntimeStats) {
+        println!("key count {}\nmessage count {}\ntime taken {:?}\n", stats.key_count, stats.message_count, stats.time_taken);
+    }
 }
+
+pub struct RuntimeStats {
+    pub message_count: usize,
+    pub key_count: usize,
+    pub time_taken: Duration
+}
+
 
 pub fn order_book_runtime<A>(
     order_book_map: &mut HashMap<u64, OrderBook>,
@@ -121,12 +134,16 @@ pub fn order_book_runtime<A>(
             order_book_id, message
         )
     }
-
+    
     let mut ts = None;
-
+    let mut message_count = 0;
+    let mut key_count = 0;
+    let now = SystemTime::now();
     // list of all order book id who had something changes to price levels
     let mut changes = HashSet::new();
     'outer: while let Some((timestamp, stack)) = key_as_timestamp.next() {
+        message_count += stack.len();
+        key_count += 1;
         if callback.stop() {
             break 'outer;
         }
@@ -352,9 +369,15 @@ pub fn order_book_runtime<A>(
     }
     
     callback.all_done(order_book_map, ts);
+    let time_taken = now.elapsed().unwrap();
+    callback.runtime_stats(RuntimeStats {
+        message_count,
+        time_taken,
+        key_count
+    });
 }
 
-pub fn from_raw_file(file: String) -> ParseResult {
+pub fn from_raw_file(file: String) -> JPXMBOParseResult {
     let mut itch = BTreeMap::new();
     let mut unknown = vec![];
     for row in file.split("\n").map(|i| i.to_string()) {
@@ -371,10 +394,11 @@ pub fn from_raw_file(file: String) -> ParseResult {
         }
     }
 
-    ParseResult { itch, unknown }
+    JPXMBOParseResult { itch, unknown }
 }
 
-pub async fn from_filepath(filepath: impl AsRef<Path>) -> ParseResult {
+
+pub async fn from_filepath(filepath: impl AsRef<Path>) -> JPXMBOParseResult {
     let mut itch = BTreeMap::new();
     let mut unknown = vec![];
     let mut lines = {
@@ -395,10 +419,56 @@ pub async fn from_filepath(filepath: impl AsRef<Path>) -> ParseResult {
             Err(e) => unknown.push(e),
         }
     }
-    ParseResult { itch, unknown }
+    JPXMBOParseResult { itch, unknown }
 }
 
-pub struct ParseResult {
+#[derive(Default, PartialEq, Eq)]
+pub struct JPXMBOParseResult {
     pub itch: BTreeMap<NaiveDateTime, Vec<MessageEnum>>,
     pub unknown: Vec<String>,
+}
+
+#[derive(Default)]
+pub struct JPXMBOStreamingParser {
+    task_stack: Vec<JoinHandle<Result<MessageEnum, String>>>,
+    itch: BTreeMap<NaiveDateTime, Vec<MessageEnum>>,
+    unknown: Vec<String>,
+}
+
+impl JPXMBOStreamingParser {
+    pub fn stream_parse(&mut self, s: String) {
+        if self.task_stack.len() == i64::MAX as usize { // idk
+            Handle::current().block_on(self._clear_task_stack());
+        }
+
+        self.task_stack.push(spawn(async move {
+            MessageEnum::try_from(s)
+        }));
+    }
+    pub fn complete_parsing(mut self) -> JPXMBOParseResult {
+        let handle = Handle::current();
+        thread::spawn(move || {
+            handle.block_on(self._clear_task_stack());
+            JPXMBOParseResult {
+                itch: self.itch,
+                unknown: self.unknown
+            }
+        }).join().unwrap()
+    }
+
+    async fn _clear_task_stack(&mut self) {
+        for handle in self.task_stack.drain(..) {
+            match handle.await.unwrap() {
+                Ok(i) => {
+                    if let Some(list) = self.itch.get_mut(&i.timestamp()) {
+                        let list: &mut Vec<MessageEnum> = list;
+                        list.push(i);
+                    } else {
+                        self.itch.insert(i.timestamp(), vec![i]);
+                    };
+                }
+                Err(e) => self.unknown.push(e),
+            }
+        }
+    }
 }
