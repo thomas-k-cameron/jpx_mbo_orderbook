@@ -1,13 +1,13 @@
 use std::{
     collections::{BTreeMap, HashMap, HashSet},
     fmt::Debug,
-    path::Path, thread, time::{SystemTime, Duration}, sync::mpsc::Receiver, 
+    path::Path, time::{SystemTime, Duration}
 };
 
 use chrono::{NaiveDateTime};
 use tokio::{
     fs::File,
-    io::{AsyncBufReadExt, BufReader}, spawn, task::JoinHandle, runtime::Handle,
+    io::{AsyncBufReadExt, BufReader}
 };
 
 use crate::MessageEnum;
@@ -119,7 +119,6 @@ pub struct RuntimeStats {
     pub key_count: usize,
     pub time_taken: Duration
 }
-
 
 pub fn order_book_runtime<A>(
     order_book_map: &mut HashMap<u64, OrderBook>,
@@ -430,45 +429,31 @@ pub struct JPXMBOParseResult {
 
 #[derive(Default)]
 pub struct JPXMBOStreamingParser {
-    task_stack: Vec<JoinHandle<Result<MessageEnum, String>>>,
+    temp: Vec<MessageEnum>,
     itch: BTreeMap<NaiveDateTime, Vec<MessageEnum>>,
     unknown: Vec<String>,
 }
 
 impl JPXMBOStreamingParser {
     pub fn stream_parse(&mut self, s: String) {
-        if self.task_stack.len() == i64::MAX as usize { // idk
-            Handle::current().block_on(self._clear_task_stack());
-        }
-
-        self.task_stack.push(spawn(async move {
-            MessageEnum::try_from(s)
-        }));
-    }
-    pub fn complete_parsing(mut self) -> JPXMBOParseResult {
-        let handle = Handle::current();
-        thread::spawn(move || {
-            handle.block_on(self._clear_task_stack());
-            JPXMBOParseResult {
-                itch: self.itch,
-                unknown: self.unknown
-            }
-        }).join().unwrap()
-    }
-
-    async fn _clear_task_stack(&mut self) {
-        for handle in self.task_stack.drain(..) {
-            match handle.await.unwrap() {
-                Ok(i) => {
-                    if let Some(list) = self.itch.get_mut(&i.timestamp()) {
-                        let list: &mut Vec<MessageEnum> = list;
-                        list.push(i);
+        match MessageEnum::try_from(s) {
+            Ok(i) => {
+                if let Some(temp_timestamp) = self.temp.first() {
+                    if i.timestamp() == temp_timestamp.timestamp() {
+                        self.temp.push(i);
                     } else {
-                        self.itch.insert(i.timestamp(), vec![i]);
+                        self.itch.entry(i.timestamp()).or_default().append(&mut self.temp);
                     };
-                }
-                Err(e) => self.unknown.push(e),
+                } else {
+                    self.temp.push(i);
+                };
             }
+            Err(e) => self.unknown.push(e),
+        }
+    }
+    pub fn complete_parsing(self) -> JPXMBOParseResult {
+        JPXMBOParseResult{
+            itch: self.itch, unknown: self.unknown
         }
     }
 }
