@@ -9,7 +9,7 @@ use std::{
     ops::RangeBounds,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct OrderBook {
     ///
     /// 銘柄基本情報
