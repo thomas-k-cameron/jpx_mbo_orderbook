@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, HashMap, HashSet},
+    collections::{HashMap, HashSet},
     fmt::Debug,
     path::Path, time::{SystemTime, Duration}
 };
@@ -377,81 +377,87 @@ pub fn order_book_runtime<A>(
 }
 
 pub fn from_raw_file(file: String) -> JPXMBOParseResult {
-    let mut itch = BTreeMap::new();
-    let mut unknown = vec![];
+    let mut parser = JPXMBOStreamingParser::default();
     for row in file.split("\n").map(|i| i.to_string()) {
-        match MessageEnum::try_from(row) {
-            Ok(i) => {
-                if let Some(list) = itch.get_mut(&i.timestamp()) {
-                    let list: &mut Vec<MessageEnum> = list;
-                    list.push(i);
-                } else {
-                    itch.insert(i.timestamp(), vec![i]);
-                };
-            }
-            Err(e) => unknown.push(e),
-        }
+        parser.stream_parse(row);
     }
 
-    JPXMBOParseResult { itch, unknown }
+    parser.complete_parsing()
 }
 
 
 pub async fn from_filepath(filepath: impl AsRef<Path>) -> JPXMBOParseResult {
-    let mut itch = BTreeMap::new();
-    let mut unknown = vec![];
+    let mut parser = JPXMBOStreamingParser::default();
     let mut lines = {
         let file = File::open(filepath).await.unwrap();
         BufReader::new(file).lines()
     };
     
-    while let Ok(Some(line)) = lines.next_line().await {
-        match MessageEnum::try_from(line) {
-            Ok(i) => {
-                if let Some(list) = itch.get_mut(&i.timestamp()) {
-                    let list: &mut Vec<MessageEnum> = list;
-                    list.push(i);
-                } else {
-                    itch.insert(i.timestamp(), vec![i]);
-                };
+    loop {
+        match lines.next_line().await {
+            Ok(Some(line)) => {
+                parser.stream_parse(line);
             }
-            Err(e) => unknown.push(e),
+            _ => {break}
         }
+        
     }
-    JPXMBOParseResult { itch, unknown }
+    parser.complete_parsing()
 }
 
 #[derive(Default, PartialEq, Eq)]
 pub struct JPXMBOParseResult {
-    pub itch: BTreeMap<NaiveDateTime, Vec<MessageEnum>>,
+    pub itch: Vec<(NaiveDateTime, Vec<MessageEnum>)>,
     pub unknown: Vec<String>,
 }
 
 #[derive(Default)]
 pub struct JPXMBOStreamingParser {
     temp: Vec<MessageEnum>,
-    itch: BTreeMap<NaiveDateTime, Vec<MessageEnum>>,
+    last_timestamp: NaiveDateTime,
+    map: HashMap<NaiveDateTime, usize>,
+    itch: Vec<(NaiveDateTime, Vec<MessageEnum>)>,
     unknown: Vec<String>,
 }
 
 impl JPXMBOStreamingParser {
+    fn insert_temp(&mut self, timestamp: Option<NaiveDateTime>) {
+        let timestamp = timestamp.unwrap_or(self.last_timestamp);
+        match self.map.get(&timestamp) {
+            Some(index) => {
+                if let Some((_, val)) = self.itch.get_mut(*index) {
+                    val.append(&mut self.temp);
+                } else {
+                    unreachable!();
+                };
+            }
+            None => {
+                self.itch.push((timestamp, self.temp.drain(..).collect()));
+                self.map.insert(timestamp, self.itch.len()-1);
+            }
+        }
+    }
     pub fn stream_parse(&mut self, s: String) {
         match MessageEnum::try_from(s) {
             Ok(i) => {
-                if let Some(temp_timestamp) = self.temp.first() {
-                    if i.timestamp() == temp_timestamp.timestamp() {
-                        self.temp.push(i);
-                    } else {
-                        self.itch.entry(i.timestamp()).or_default().append(&mut self.temp);
-                    };
-                } else {
-                    self.temp.push(i);
+                let check = if let Some(temp_timestamp) = self.temp.first() {
+                    i.timestamp() == temp_timestamp.timestamp()
+                }else {
+                    true
                 };
+
+                if !check {
+                    self.insert_temp(i.timestamp().into());
+                };
+                self.last_timestamp = i.timestamp();
+                self.temp.push(i);
             }
             Err(e) => self.unknown.push(e),
         }
     }
-    pub fn complete_parsing(self) -> JPXMBOParseResult {
+    pub fn complete_parsing(mut self) -> JPXMBOParseResult {
+        self.insert_temp(None);
+        self.itch.sort_by(|(a, _),(b, _)| a.cmp(b));
         JPXMBOParseResult{
             itch: self.itch, unknown: self.unknown
         }
