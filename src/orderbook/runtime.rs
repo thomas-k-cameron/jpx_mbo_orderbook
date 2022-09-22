@@ -267,7 +267,7 @@ pub fn order_book_runtime<A>(
                     order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
-                        .put(msg);
+                        .add(msg);
                 }
                 MessageEnum::DeleteOrder(msg) => {
                     changes.insert(msg.order_book_id);

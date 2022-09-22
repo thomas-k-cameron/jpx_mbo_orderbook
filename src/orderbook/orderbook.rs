@@ -195,7 +195,7 @@ impl OrderBook {
     }
 
     /// inserts new order onto orderbook
-    pub fn put(&mut self, a: AddOrder) {
+    pub fn add(&mut self, a: AddOrder) {
         let tree = match a.side {
             Side::Sell => &mut self.ask,
             Side::Buy => &mut self.bid,
