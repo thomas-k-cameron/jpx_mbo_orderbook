@@ -212,7 +212,7 @@ impl OrderBook {
                 assert!(opts.is_none());
             })
             .or_insert({
-                let mut t = BTreeMap::new();
+                let mut t = HashMap::new();
                 t.insert(a.order_id, a);
                 t
             });
