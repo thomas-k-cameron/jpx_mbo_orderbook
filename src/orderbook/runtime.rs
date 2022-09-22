@@ -155,7 +155,7 @@ pub fn order_book_runtime<A>(
         message_count += stack.len();
         key_count += 1;
         
-        if intrinsics::likely(callback.stop())  {
+        if intrinsics::unlikely(callback.stop())  {
             break 'outer;
         }
         ts.replace(timestamp);
@@ -197,7 +197,7 @@ pub fn order_book_runtime<A>(
         };
 
         for msg in stack.clone() {
-            if intrinsics::likely(callback.stop()) {
+            if intrinsics::unlikely(callback.stop()) {
                 break 'outer;
             }
 
