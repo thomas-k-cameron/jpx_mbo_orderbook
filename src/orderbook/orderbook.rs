@@ -30,7 +30,7 @@ pub struct OrderBook {
     pub bid: PriceLevel,
 
     pub equibrium_price: Vec<EquilibriumPrice>,
-    pub trading_status: Vec<String>,
+    pub trading_status: Vec<TradingStatusInfo>,
     pub last_executed_price: Option<i64>,
 }
 
@@ -312,11 +312,11 @@ impl OrderBook {
         opts.unwrap()
     }
 
-    pub fn set_last_equilibrium_price(&mut self, z: EquilibriumPrice) {
+    pub fn push_last_equilibrium_price(&mut self, z: EquilibriumPrice) {
         self.equibrium_price.push(z);
     }
 
-    pub fn set_trading_status(&mut self, s: &TradingStatusInfo) {
-        self.trading_status.push(s.state_name.clone());
+    pub fn push_trading_status(&mut self, s: &TradingStatusInfo) {
+        self.trading_status.push(s.clone());
     }
 }
