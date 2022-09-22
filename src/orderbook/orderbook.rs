@@ -31,7 +31,7 @@ pub struct OrderBook {
     pub bid: PriceLevel,
 
     pub equibrium_price: Option<EquilibriumPrice>,
-    pub trading_status: Option<String>,
+    pub trading_status: Vec<String>,
     pub last_executed_price: Option<i64>,
 }
 
@@ -54,7 +54,7 @@ impl OrderBook {
             ask: BTreeMap::new(),
             bid: BTreeMap::new(),
             equibrium_price: None,
-            trading_status: None,
+            trading_status: vec![],
             last_executed_price: Some(0),
         }
     }
@@ -319,6 +319,6 @@ impl OrderBook {
     }
 
     pub fn set_trading_status(&mut self, s: &TradingStatusInfo) {
-        self.trading_status.replace(s.state_name.clone());
+        self.trading_status.push(s.state_name.clone());
     }
 }

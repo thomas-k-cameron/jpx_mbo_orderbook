@@ -67,11 +67,11 @@ pub trait OrderBookRunTimeCallback {
     #[allow(unused_variables)]
     #[inline]
     /// called only when `C` tag message was received
-    fn executed_with_price_info(
+    fn ctag_execution(
         &mut self,
         order_book_map: &mut HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
-        executed_with_price_info: Vec<OrderExecutionWithPriceInfo>,
+        executed_with_price_info: Vec<CTagWithCorrespondingPTag>,
     ) {
     }
 
@@ -123,6 +123,12 @@ pub struct RuntimeStats {
     pub time_taken: Duration,
 }
 
+pub struct CTagWithCorrespondingPTag {
+    pub c_tag: ExecutionWithPriceInfo,
+    pub paired_ctag: Option<ExecutionWithPriceInfo>,
+    pub p_tags: Vec<LegPrice>
+}
+
 pub fn order_book_runtime<A>(
     order_book_map: &mut HashMap<u64, OrderBook>,
     mut key_as_timestamp: impl Iterator<Item = (NaiveDateTime, Vec<MessageEnum>)>,
@@ -158,7 +164,7 @@ pub fn order_book_runtime<A>(
         // stacks put order retrieved after `Executed` message  is handled
         let mut executions = vec![];
         // stacks put order retrieved after `ExecutionWithPriceInfo` message is handled
-        let mut executed_with_price_info = vec![];
+        let mut executed_with_price_info: Vec<CTagWithCorrespondingPTag> = vec![];
         // stacks put order retrieved after `DeleteOrder` message is handled
         let mut deletion = vec![];
 
@@ -303,11 +309,19 @@ pub fn order_book_runtime<A>(
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .c_executed(&msg);
 
-                    let item = OrderExecutionWithPriceInfo {
-                        matched_order_after_execution: add_order,
-                        msg,
+                    'a: {
+                        for i in executed_with_price_info.iter_mut() {
+                            if i.c_tag.match_id == msg.match_id {
+                                i.paired_ctag.replace(msg); 
+                                break 'a
+                            }
+                        }
+                        executed_with_price_info.push(CTagWithCorrespondingPTag {
+                            c_tag: msg,
+                            paired_ctag: None,
+                            p_tags: Vec::with_capacity(2),
+                        });
                     };
-                    executed_with_price_info.push(item);
                 }
                 // things that I don't know what to do with
                 MessageEnum::CombinationProduct(msg) => {
@@ -315,13 +329,15 @@ pub fn order_book_runtime<A>(
                         book.set_combination_orderbook(msg)
                     } else {
                         unreachable!("{} => {:?}", msg.combination_order_book_id, msg);
-                    }
+                    };
                 }
                 MessageEnum::LegPrice(msg) => {
-                    //msg.
-                    order_book_map
-                        .get_mut(&msg.order_book_id)
-                        .expect(&err_msg(msg.order_book_id, &msg));
+                    for i in executed_with_price_info.iter_mut() {
+                        if msg.match_id == i.c_tag.match_id {
+                            i.p_tags.push(msg);
+                            break
+                        }
+                    };
                 }
                 MessageEnum::SystemEventInfo(_msg) => {
                     //
@@ -334,7 +350,7 @@ pub fn order_book_runtime<A>(
         }
 
         if !executed_with_price_info.is_empty() {
-            callback.executed_with_price_info(order_book_map, &timestamp, executed_with_price_info);
+            callback.ctag_execution(order_book_map, &timestamp, executed_with_price_info);
         }
 
         if !deletion.is_empty() {
