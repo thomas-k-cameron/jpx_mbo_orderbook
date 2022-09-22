@@ -51,7 +51,7 @@ impl OrderBook {
             orders: HashMap::new(),
             ask: BTreeMap::new(),
             bid: BTreeMap::new(),
-            equibrium_price: vec[],
+            equibrium_price: vec![],
             trading_status: vec![],
             last_executed_price: Some(0),
         }
