@@ -332,7 +332,7 @@ pub fn order_book_runtime<A>(
                 // things that I don't know what to do with
                 MessageEnum::CombinationProduct(msg) => {
                     if let Some(book) = order_book_map.get_mut(&msg.combination_order_book_id) {
-                        book.set_combination_orderbook(msg)
+                        book.push_combination_orderbook(msg)
                     } else {
                         unreachable!("{} => {:?}", msg.combination_order_book_id, msg);
                     };

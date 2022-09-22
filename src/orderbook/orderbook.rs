@@ -57,7 +57,7 @@ impl OrderBook {
         }
     }
 
-    pub fn set_combination_orderbook(&mut self, m: CombinationProduct) {
+    pub fn push_combination_orderbook(&mut self, m: CombinationProduct) {
         self.combination_product_info.push(m);
     }
 
