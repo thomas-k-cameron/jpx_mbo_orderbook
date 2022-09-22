@@ -240,12 +240,10 @@ impl OrderBook {
             unreachable!("{}", func_e())
         };
 
-        let mut opts = None;
-        let check = if let Some(a) = level.get_mut(&e.order_id) {
+        let (check, modified_order_copy) = if let Some(a) = level.get_mut(&e.order_id) {
             a.quantity -= e.executed_quantity;
             debug_assert!(a.quantity >= 0);
-            opts.replace(a.clone());
-            a.quantity == 0
+            (a.quantity == 0, a.clone())
         } else {
             unreachable!("{}", func_e())
         };
@@ -259,7 +257,7 @@ impl OrderBook {
             tree.remove(&price);
         }
 
-        opts.unwrap()
+        modified_order_copy
     }
 
     /// Handles C message:   
