@@ -29,7 +29,7 @@ pub struct OrderBook {
     /// price => {id: AddOrder}
     pub bid: PriceLevel,
 
-    pub equibrium_price: Option<EquilibriumPrice>,
+    pub equibrium_price: Vec<EquilibriumPrice>,
     pub trading_status: Vec<String>,
     pub last_executed_price: Option<i64>,
 }
@@ -51,7 +51,7 @@ impl OrderBook {
             orders: HashMap::new(),
             ask: BTreeMap::new(),
             bid: BTreeMap::new(),
-            equibrium_price: None,
+            equibrium_price: vec[],
             trading_status: vec![],
             last_executed_price: Some(0),
         }
@@ -313,7 +313,7 @@ impl OrderBook {
     }
 
     pub fn set_last_equilibrium_price(&mut self, z: EquilibriumPrice) {
-        self.equibrium_price.replace(z);
+        self.equibrium_price.push(z);
     }
 
     pub fn set_trading_status(&mut self, s: &TradingStatusInfo) {
