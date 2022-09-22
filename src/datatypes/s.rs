@@ -17,6 +17,11 @@ use crate::{tag_guard, util::extract_datetime};
 ///システムイベントの更新のタイミングで提供する。
 ///
 ///詳細は、4.2.6(4) 章を参照のこと。
+/// 
+/// コード 項目設定値説明
+/// O メッセージ送信の開始。どの営業日も、このメッセージの送信から開始。
+/// C メッセージ送信の終了。どの営業日も、このメッセージの送信で終了。
+/// ※1 本タグは、1 営業日で送信開始の O と送信終了の C の 2 レコードのみ配信。
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct SystemEventInfo {
     pub timestamp: NaiveDateTime,
