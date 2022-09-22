@@ -338,12 +338,15 @@ pub fn order_book_runtime<A>(
                     };
                 }
                 MessageEnum::LegPrice(msg) => {
-                    for i in executed_with_price_info.iter_mut() {
-                        if msg.match_id == i.c_tag.match_id {
-                            i.p_tags.push(msg);
-                            break
-                        }
-                    };
+                    'a: {
+                        for i in executed_with_price_info.iter_mut() {
+                            if msg.match_id == i.c_tag.match_id {
+                                i.p_tags.push(msg);
+                                break 'a;
+                            }
+                        };
+                        unreachable!("CTagWithCorrespondingPTag not found for LegPrice {msg:#?}");
+                    }
                 }
                 MessageEnum::SystemEventInfo(_msg) => {
                     //
