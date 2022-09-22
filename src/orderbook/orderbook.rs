@@ -34,7 +34,7 @@ pub struct OrderBook {
     pub last_executed_price: Option<i64>,
 }
 
-pub type PriceLevel = BTreeMap<i64, BTreeMap<u64, AddOrder>>;
+pub type PriceLevel = BTreeMap<i64, HashMap<u64, AddOrder>>;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PriceLevelView {
     pub price: i64,
