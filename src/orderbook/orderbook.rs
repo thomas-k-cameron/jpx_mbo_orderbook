@@ -240,7 +240,7 @@ impl OrderBook {
             unreachable!("{}", func_e())
         };
 
-        let (check, modified_order_copy) = if let Some(a) = level.get_mut(&e.order_id) {
+        let (check, copy_of_add_order) = if let Some(a) = level.get_mut(&e.order_id) {
             a.quantity -= e.executed_quantity;
             debug_assert!(a.quantity >= 0);
             (a.quantity == 0, a.clone())
@@ -257,7 +257,7 @@ impl OrderBook {
             tree.remove(&price);
         }
 
-        modified_order_copy
+        copy_of_add_order
     }
 
     /// Handles C message:   
@@ -288,12 +288,10 @@ impl OrderBook {
             unreachable!("{}", func_e())
         };
 
-        let mut opts = None;
-        let check = if let Some(a) = level.get_mut(&c.order_id) {
+        let (check, copy_of_add_order) = if let Some(a) = level.get_mut(&c.order_id) {
             a.quantity -= c.executed_quantity;
             assert!(a.quantity >= 0);
-            opts.replace(a.clone());
-            a.quantity == 0
+            (a.quantity == 0, a.clone())
         } else {
             unreachable!("{}", func_e())
         };
@@ -307,7 +305,7 @@ impl OrderBook {
             tree.remove(&price);
         }
 
-        opts.unwrap()
+        copy_of_add_order
     }
 
     pub fn push_last_equilibrium_price(&mut self, z: EquilibriumPrice) {
