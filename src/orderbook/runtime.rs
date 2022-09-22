@@ -125,7 +125,9 @@ pub struct RuntimeStats {
 
 pub struct CTagWithCorrespondingPTag {
     pub c_tag: ExecutionWithPriceInfo,
+    pub removed_add_order: AddOrder,
     pub paired_ctag: Option<ExecutionWithPriceInfo>,
+    pub removed_add_order2: Option<AddOrder>,
     pub p_tags: Vec<LegPrice>
 }
 
@@ -313,6 +315,7 @@ pub fn order_book_runtime<A>(
                         for i in executed_with_price_info.iter_mut() {
                             if i.c_tag.match_id == msg.match_id {
                                 i.paired_ctag.replace(msg); 
+                                i.removed_add_order2.replace(add_order);
                                 break 'a
                             }
                         }
@@ -320,6 +323,8 @@ pub fn order_book_runtime<A>(
                             c_tag: msg,
                             paired_ctag: None,
                             p_tags: Vec::with_capacity(2),
+                            removed_add_order: add_order,
+                            removed_add_order2: None,
                         });
                     };
                 }
