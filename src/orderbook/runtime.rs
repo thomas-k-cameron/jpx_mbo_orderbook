@@ -1,13 +1,15 @@
 use std::{
     collections::{HashMap, HashSet},
     fmt::Debug,
-    path::Path, time::{SystemTime, Duration}
+    path::Path,
+    time::{Duration, SystemTime},
+    vec,
 };
 
-use chrono::{NaiveDateTime};
+use chrono::NaiveDateTime;
 use tokio::{
     fs::File,
-    io::{AsyncBufReadExt, BufReader}
+    io::{AsyncBufReadExt, BufReader},
 };
 
 use crate::MessageEnum;
@@ -16,8 +18,7 @@ use crate::{datatypes::*, OrderBook};
 use crate::callback_datatype::*;
 
 pub trait OrderBookRunTimeCallback {
-
-    // stops the runtime when true is returned    
+    // stops the runtime when true is returned
     #[inline(always)]
     fn stop(&mut self) -> bool {
         false
@@ -50,7 +51,6 @@ pub trait OrderBookRunTimeCallback {
         timestamp: &NaiveDateTime,
         changes: &HashSet<u64>,
     ) {
-
     }
 
     #[allow(unused_variables)]
@@ -110,14 +110,17 @@ pub trait OrderBookRunTimeCallback {
     #[allow(unused_variables)]
     #[inline]
     fn runtime_stats(&mut self, stats: RuntimeStats) {
-        println!("key count {}\nmessage count {}\ntime taken {:?}\n", stats.key_count, stats.message_count, stats.time_taken);
+        println!(
+            "key count {}\nmessage count {}\ntime taken {:?}\n",
+            stats.key_count, stats.message_count, stats.time_taken
+        );
     }
 }
 
 pub struct RuntimeStats {
     pub message_count: usize,
     pub key_count: usize,
-    pub time_taken: Duration
+    pub time_taken: Duration,
 }
 
 pub fn order_book_runtime<A>(
@@ -133,7 +136,7 @@ pub fn order_book_runtime<A>(
             order_book_id, message
         )
     }
-    
+
     let mut ts = None;
     let mut message_count = 0;
     let mut key_count = 0;
@@ -175,7 +178,7 @@ pub fn order_book_runtime<A>(
                     }
                     _ => (),
                 }
-            };
+            }
 
             let mut modified_orders_map = HashMap::new();
             for id in add_set.intersection(&del_set) {
@@ -347,7 +350,7 @@ pub fn order_book_runtime<A>(
                     delete_msg.unwrap(),
                     previous_add_order.unwrap(),
                 );
-                
+
                 let ord = ModifiedOrder {
                     id,
                     modify_msg,
@@ -366,13 +369,13 @@ pub fn order_book_runtime<A>(
         // post processing
         callback.event_end(order_book_map, &timestamp, &stack[..]);
     }
-    
+
     callback.all_done(order_book_map, ts);
     let time_taken = now.elapsed().unwrap();
     callback.runtime_stats(RuntimeStats {
         message_count,
         time_taken,
-        key_count
+        key_count,
     });
 }
 
@@ -385,22 +388,20 @@ pub fn from_raw_file(file: String) -> JPXMBOParseResult {
     parser.complete_parsing()
 }
 
-
 pub async fn from_filepath(filepath: impl AsRef<Path>) -> JPXMBOParseResult {
     let mut parser = JPXMBOStreamingParser::default();
     let mut lines = {
         let file = File::open(filepath).await.unwrap();
         BufReader::new(file).lines()
     };
-    
+
     loop {
         match lines.next_line().await {
             Ok(Some(line)) => {
                 parser.stream_parse(line);
             }
-            _ => {break}
+            _ => break,
         }
-        
     }
     parser.complete_parsing()
 }
@@ -432,7 +433,9 @@ impl JPXMBOStreamingParser {
                 };
             }
             None => {
-                self.itch.push((timestamp, self.temp.drain(..).collect()));
+                let mut vector = Vec::with_capacity(self.temp.len());
+                vector.append(&mut self.temp);
+                self.itch.push((timestamp, vector));
                 self.map.insert(timestamp, self.itch.len()-1);
             }
         }
@@ -442,14 +445,14 @@ impl JPXMBOStreamingParser {
             Ok(i) => {
                 let check = if let Some(temp_timestamp) = self.temp.first() {
                     i.timestamp() == temp_timestamp.timestamp()
-                }else {
+                } else {
                     true
                 };
 
                 if !check {
                     self.insert_temp(i.timestamp().into());
+                    self.last_timestamp = i.timestamp();
                 };
-                self.last_timestamp = i.timestamp();
                 self.temp.push(i);
             }
             Err(e) => self.unknown.push(e),
@@ -457,9 +460,10 @@ impl JPXMBOStreamingParser {
     }
     pub fn complete_parsing(mut self) -> JPXMBOParseResult {
         self.insert_temp(None);
-        self.itch.sort_by(|(a, _),(b, _)| a.cmp(b));
-        JPXMBOParseResult{
-            itch: self.itch, unknown: self.unknown
+        self.itch.sort_by(|(a, _), (b, _)| a.cmp(b));
+        JPXMBOParseResult {
+            itch: self.itch,
+            unknown: self.unknown,
         }
     }
 }

@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
@@ -260,7 +260,7 @@ impl OrderBook {
         if level.len() == 0 {
             tree.remove(&price);
         }
-        
+
         opts.unwrap()
     }
 
