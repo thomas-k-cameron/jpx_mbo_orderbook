@@ -312,7 +312,7 @@ impl OrderBook {
         self.equibrium_price.push(z);
     }
 
-    pub fn push_trading_status(&mut self, s: &TradingStatusInfo) {
-        self.trading_status.push(s.clone());
+    pub fn push_trading_status(&mut self, s: TradingStatusInfo) {
+        self.trading_status.push(s);
     }
 }

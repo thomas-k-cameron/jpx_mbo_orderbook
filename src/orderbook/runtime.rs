@@ -235,7 +235,7 @@ pub fn order_book_runtime<A>(
                     let book = order_book_map.get_mut(&msg.order_book_id);
 
                     if let Some(book) = book {
-                        book.push_trading_status(&msg);
+                        book.push_trading_status(msg);
                     } else {
                         println!("{}", err_msg(msg.order_book_id, &msg));
                     };
