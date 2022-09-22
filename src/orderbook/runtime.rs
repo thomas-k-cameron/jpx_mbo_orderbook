@@ -3,7 +3,7 @@ use std::{
     fmt::Debug,
     path::Path,
     time::{Duration, SystemTime},
-    vec,
+    intrinsics,
 };
 
 use chrono::NaiveDateTime;
@@ -154,7 +154,8 @@ pub fn order_book_runtime<A>(
     'outer: while let Some((timestamp, stack)) = key_as_timestamp.next() {
         message_count += stack.len();
         key_count += 1;
-        if callback.stop() {
+        
+        if intrinsics::likely(callback.stop())  {
             break 'outer;
         }
         ts.replace(timestamp);
@@ -196,7 +197,7 @@ pub fn order_book_runtime<A>(
         };
 
         for msg in stack.clone() {
-            if callback.stop() {
+            if intrinsics::likely(callback.stop()) {
                 break 'outer;
             }
 
@@ -280,8 +281,8 @@ pub fn order_book_runtime<A>(
                     let id = (&msg).try_into().unwrap();
                     if modified_order_id_map.contains_key(&id) {
                         modified_order_id_map.entry(id).and_modify(|opts| {
-                            opts.1.replace(msg.clone());
-                            opts.2.replace(add_order.clone());
+                            opts.1.replace(msg);
+                            opts.2.replace(add_order);
                         });
                     } else {
                         // deletion

@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
-    ProductInfo, Side, TickSize, TradingStatusInfo,
+    ProductInfo, Side, TickSize, TradingStatusInfo
 };
 use std::{
     collections::{BTreeMap, HashMap},
@@ -15,7 +15,6 @@ pub struct OrderBook {
     /// 銘柄基本情報
     pub product_info: ProductInfo,
     pub combination_product_info: Vec<CombinationProduct>,
-    pub legs: Vec<CombinationProduct>,
     ///
     /// tick info
     pub tick_info: Vec<TickSize>,
@@ -48,7 +47,6 @@ impl OrderBook {
         Self {
             product_info: r,
             combination_product_info: vec![],
-            legs: vec![],
             tick_info: Vec::with_capacity(5),
             orders: HashMap::new(),
             ask: BTreeMap::new(),
