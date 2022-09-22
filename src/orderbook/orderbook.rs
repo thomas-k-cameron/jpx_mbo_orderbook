@@ -47,13 +47,13 @@ impl OrderBook {
         Self {
             product_info: r,
             combination_product_info: vec![],
-            tick_info: Vec::with_capacity(5),
+            tick_info: vec![],
             orders: HashMap::new(),
             ask: BTreeMap::new(),
             bid: BTreeMap::new(),
             equibrium_price: vec![],
             trading_status: vec![],
-            last_executed_price: Some(0),
+            last_executed_price: None,
         }
     }
 
