@@ -32,6 +32,7 @@ pub struct OrderBook {
     pub equibrium_price: Vec<EquilibriumPrice>,
     pub trading_status: Vec<TradingStatusInfo>,
     pub last_executed_price: Option<i64>,
+    
 }
 
 pub type PriceLevel = BTreeMap<i64, HashMap<u64, AddOrder>>;

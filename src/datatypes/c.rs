@@ -38,12 +38,15 @@ pub struct ExecutionWithPriceInfo {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
     pub executed_quantity: i64,
-    pub match_id: String,
+    pub match_id: u64,
     /// 板寄せ約定判別フラグ
     /// コード 項目設定値説明
     /// - Y 板寄約定
     /// - N ザラバ約定
-    pub occurred_at_cross: String,
+    /// ここでは、Y出合った場合にtrue, Nで会った場合にfalseとしている。
+    /// 
+    /// おそらく、Y == YES, N == NOと思われるため。知らんけど
+    pub occurred_at_cross: bool,
     pub order_book_id: u64,
     pub order_id: u64,
     pub side: Side,
@@ -55,8 +58,8 @@ impl_message! {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
     pub executed_quantity: i64,
-    pub match_id: String,
-    pub occurred_at_cross: String,
+    pub match_id: u64,
+    pub occurred_at_cross: bool,
     pub order_book_id: u64,
     pub order_id: u64,
     pub side: Side,
@@ -82,14 +85,14 @@ impl TryFrom<&str> for ExecutionWithPriceInfo {
         let _reserved = iter.next();
 
         let trade_price = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
-        let occurred_at_cross = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let occurred_at_cross: String = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
 
         Ok(Self {
             timestamp,
             combo_group_id,
             executed_quantity,
             match_id,
-            occurred_at_cross,
+            occurred_at_cross: occurred_at_cross.as_str() == "Y",
             order_book_id,
             order_id,
             side,

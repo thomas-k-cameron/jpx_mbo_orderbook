@@ -5,9 +5,13 @@ pub struct OrderExecution {
     pub msg: Executed,
 }
 
-pub struct OrderExecutionWithPriceInfo {
-    pub matched_order_after_execution: AddOrder,
-    pub msg: ExecutionWithPriceInfo,
+#[derive(Debug)]
+pub struct CTagWithCorrespondingPTag {
+    pub c_tag: ExecutionWithPriceInfo,
+    pub matched_add_order: AddOrder,
+    pub paired_ctag: Option<ExecutionWithPriceInfo>,
+    pub matched_add_order2: Option<AddOrder>,
+    pub p_tags: Vec<LegPrice>
 }
 
 /// struct for order that were deleted

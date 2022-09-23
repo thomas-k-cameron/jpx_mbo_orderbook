@@ -123,13 +123,6 @@ pub struct RuntimeStats {
     pub time_taken: Duration,
 }
 
-pub struct CTagWithCorrespondingPTag {
-    pub c_tag: ExecutionWithPriceInfo,
-    pub removed_add_order: AddOrder,
-    pub paired_ctag: Option<ExecutionWithPriceInfo>,
-    pub removed_add_order2: Option<AddOrder>,
-    pub p_tags: Vec<LegPrice>
-}
 
 pub fn order_book_runtime<A>(
     order_book_map: &mut HashMap<u64, OrderBook>,
@@ -316,7 +309,7 @@ pub fn order_book_runtime<A>(
                         for i in executed_with_price_info.iter_mut() {
                             if i.c_tag.match_id == msg.match_id {
                                 i.paired_ctag.replace(msg); 
-                                i.removed_add_order2.replace(add_order);
+                                i.matched_add_order2.replace(add_order);
                                 break 'a
                             }
                         }
@@ -324,8 +317,8 @@ pub fn order_book_runtime<A>(
                             c_tag: msg,
                             paired_ctag: None,
                             p_tags: Vec::with_capacity(2),
-                            removed_add_order: add_order,
-                            removed_add_order2: None,
+                            matched_add_order: add_order,
+                            matched_add_order2: None,
                         });
                     };
                 }
@@ -340,12 +333,12 @@ pub fn order_book_runtime<A>(
                 MessageEnum::LegPrice(msg) => {
                     'a: {
                         for i in executed_with_price_info.iter_mut() {
-                            if msg.match_id == i.c_tag.match_id {
+                            if msg.combo_group_id == i.c_tag.combo_group_id {
                                 i.p_tags.push(msg);
                                 break 'a;
                             }
                         };
-                        unreachable!("CTagWithCorrespondingPTag not found for LegPrice {msg:#?}");
+                        unreachable!("CTagWithCorrespondingPTag not found for LegPrice {msg:#?}\n");
                     }
                 }
                 MessageEnum::SystemEventInfo(_msg) => {
@@ -359,6 +352,7 @@ pub fn order_book_runtime<A>(
         }
 
         if !executed_with_price_info.is_empty() {
+            println!("{executed_with_price_info:#?}");
             callback.ctag_execution(order_book_map, &timestamp, executed_with_price_info);
         }
 

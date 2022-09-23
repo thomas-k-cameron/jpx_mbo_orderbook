@@ -28,8 +28,8 @@ use std::str::FromStr;
 pub struct LegPrice {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
-    pub match_id: String,
-    pub occurred_at_cross: String,
+    pub match_id: u64,
+    pub occurred_at_cross: bool,
     pub order_book_id: u64,
     pub quantity: i64,
     pub trade_price: i64,
@@ -39,8 +39,8 @@ impl_message! {
     name: LegPrice 'P';
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
-    pub match_id: String,
-    pub occurred_at_cross: String,
+    pub match_id: u64,
+    pub occurred_at_cross: bool,
     pub order_book_id: u64,
     pub quantity: i64,
     pub trade_price: i64,
@@ -61,7 +61,8 @@ impl TryFrom<&str> for LegPrice {
         iter.next();
         iter.next();
         iter.next();
-        let occurred_at_cross = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let _occurred_at_cross: String = FromStr::from_str(iter.next().ok_or(())?).ok().ok_or(())?;
+        let occurred_at_cross = _occurred_at_cross.as_str() == "Y";
 
         Ok(Self {
             timestamp,
