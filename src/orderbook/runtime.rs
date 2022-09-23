@@ -11,7 +11,6 @@ use tokio::{
     fs::File,
     io::{AsyncBufReadExt, BufReader},
 };
-
 use crate::MessageEnum;
 use crate::{datatypes::*, OrderBook};
 
@@ -28,7 +27,7 @@ pub trait OrderBookRunTimeCallback {
     #[inline]
     fn event_start(
         &mut self,
-        order_book_map: &mut HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
         stack: &[MessageEnum],
     ) {
@@ -37,7 +36,7 @@ pub trait OrderBookRunTimeCallback {
     #[inline]
     fn event_end(
         &mut self,
-        order_book_map: &mut HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
         stack: &[MessageEnum],
     ) {
@@ -58,7 +57,7 @@ pub trait OrderBookRunTimeCallback {
     /// called only when `E` tag message was received
     fn executions(
         &mut self,
-        order_book_map: &mut HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
         executions: Vec<OrderExecution>,
     ) {
@@ -69,7 +68,7 @@ pub trait OrderBookRunTimeCallback {
     /// called only when `C` tag message was received
     fn ctag_execution(
         &mut self,
-        order_book_map: &mut HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
         executed_with_price_info: Vec<CTagWithCorrespondingPTag>,
     ) {
@@ -80,7 +79,7 @@ pub trait OrderBookRunTimeCallback {
     /// called only when `D` tag message was received
     fn deletions(
         &mut self,
-        order_book_map: &mut HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
         deletion: Vec<OrderDeletion>,
     ) {
@@ -92,7 +91,7 @@ pub trait OrderBookRunTimeCallback {
     /// modified orders are detected when message with d tag and a tag refers to the same unique_id
     fn modified_orders(
         &mut self,
-        order_book_map: &mut HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<u64, OrderBook>,
         timestamp: &NaiveDateTime,
         modified_orders: Vec<ModifiedOrder>,
     ) {
@@ -102,7 +101,7 @@ pub trait OrderBookRunTimeCallback {
     #[inline]
     fn all_done(
         &mut self,
-        order_book_map: &mut HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<u64, OrderBook>,
         timestamp: Option<NaiveDateTime>,
     ) {
     }
@@ -137,7 +136,7 @@ pub fn order_book_runtime<A>(
             order_book_id, message
         )
     }
-
+    
     let mut ts = None;
     let mut message_count = 0;
     let mut key_count = 0;
@@ -145,12 +144,13 @@ pub fn order_book_runtime<A>(
     // list of all order book id who had something changes to price levels
     let mut changes = HashSet::new();
     'outer: while let Some((timestamp, stack)) = key_as_timestamp.next() {
-        message_count += stack.len();
-        key_count += 1;
-        
         if intrinsics::unlikely(callback.stop())  {
             break 'outer;
         }
+
+        message_count += stack.len();
+        key_count += 1;
+        
         ts.replace(timestamp);
         changes.clear();
         // sort stack
@@ -304,7 +304,7 @@ pub fn order_book_runtime<A>(
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .c_executed(&msg);
-
+                    
                     'a: {
                         for i in executed_with_price_info.iter_mut() {
                             if i.c_tag.match_id == msg.match_id {
@@ -352,7 +352,6 @@ pub fn order_book_runtime<A>(
         }
 
         if !executed_with_price_info.is_empty() {
-            println!("{executed_with_price_info:#?}");
             callback.ctag_execution(order_book_map, &timestamp, executed_with_price_info);
         }
 
@@ -399,28 +398,32 @@ pub fn order_book_runtime<A>(
 }
 
 pub fn from_raw_file(file: String) -> JPXMBOParseResult {
-    let mut parser = JPXMBOStreamingParser::default();
+    let mut parser = JPXMBOParser::default();
     for row in file.split("\n").map(|i| i.to_string()) {
-        parser.stream_parse(row);
+        parser.parse_line(row);
     }
 
     parser.complete_parsing()
 }
 
 pub async fn from_filepath(filepath: impl AsRef<Path>) -> JPXMBOParseResult {
-    let mut parser = JPXMBOStreamingParser::default();
+    let mut parser = JPXMBOParser::default();
     let mut lines = {
         let file = File::open(filepath).await.unwrap();
         BufReader::new(file).lines()
     };
-
+    
     loop {
         match lines.next_line().await {
             Ok(Some(line)) => {
-                parser.stream_parse(line);
+                parser.parse_line(line);
             }
+            Err(e) => {
+                println!("{e}");
+                break
+            },
             _ => break,
-        }
+        };
     }
     parser.complete_parsing()
 }
@@ -432,15 +435,44 @@ pub struct JPXMBOParseResult {
 }
 
 #[derive(Default)]
-pub struct JPXMBOStreamingParser {
+pub struct JPXMBOParser {
     temp: Vec<MessageEnum>,
     last_timestamp: NaiveDateTime,
     map: HashMap<NaiveDateTime, usize>,
     itch: Vec<(NaiveDateTime, Vec<MessageEnum>)>,
-    unknown: Vec<String>,
+    unknown: Vec<String>
 }
 
-impl JPXMBOStreamingParser {
+impl JPXMBOParser {
+    pub async fn from_filepath(filepath: impl AsRef<Path>) -> JPXMBOParser {
+        let mut parser = JPXMBOParser::default();
+        let mut lines = {
+            let file = File::open(filepath).await.unwrap();
+            BufReader::new(file).lines()
+        };
+    
+        loop {
+            match lines.next_line().await {
+                Ok(Some(line)) => {
+                    parser.parse_line(line);
+                }
+                Err(e) => {
+                    println!("{e}");
+                    break
+                },
+                _ => break,
+            };
+        }
+        parser
+    }
+    pub fn from_string(file: String) -> JPXMBOParser {
+        let mut parser = JPXMBOParser::default();
+        for row in file.split("\n").map(|i| i.to_string()) {
+            parser.parse_line(row);
+        }
+    
+        parser
+    }
     fn insert_temp(&mut self, timestamp: Option<NaiveDateTime>) {
         let timestamp = timestamp.unwrap_or(self.last_timestamp);
         match self.map.get(&timestamp) {
@@ -457,9 +489,9 @@ impl JPXMBOStreamingParser {
                 self.itch.push((timestamp, vector));
                 self.map.insert(timestamp, self.itch.len()-1);
             }
-        }
+        };
     }
-    pub fn stream_parse(&mut self, s: String) {
+    pub fn parse_line(&mut self, s: String) {
         match MessageEnum::try_from(s) {
             Ok(i) => {
                 let check = if let Some(temp_timestamp) = self.temp.first() {
