@@ -6,7 +6,7 @@ use crate::{
 };
 use std::{
     collections::{BTreeMap, HashMap},
-    ops::RangeBounds,
+    ops::RangeBounds
 };
 
 #[derive(Debug)]
@@ -31,8 +31,6 @@ pub struct OrderBook {
 
     pub equibrium_price: Vec<EquilibriumPrice>,
     pub trading_status: Vec<TradingStatusInfo>,
-    pub last_executed_price: Option<i64>,
-    
 }
 
 pub type PriceLevel = BTreeMap<i64, HashMap<u64, AddOrder>>;
@@ -54,7 +52,6 @@ impl OrderBook {
             bid: BTreeMap::new(),
             equibrium_price: vec![],
             trading_status: vec![],
-            last_executed_price: None,
         }
     }
 
@@ -221,6 +218,10 @@ impl OrderBook {
 
     /// Handles E message:
     /// Reduces the quantity of an order which is executed against.
+    /// 
+    /// returns a copy of AddOrder siting on the orderbook.
+    /// 
+    /// In other words, AddOrder.quantity >= 0
     pub fn executed(&mut self, e: &Executed) -> AddOrder {
         let tree = match e.side {
             Side::Sell => &mut self.ask,
@@ -234,7 +235,7 @@ impl OrderBook {
         } else {
             unreachable!("{}", func_e())
         };
-        self.last_executed_price = Some(price);
+
         let level = if let Some(l) = tree.get_mut(&price) {
             l
         } else {
@@ -265,7 +266,8 @@ impl OrderBook {
     ///
     /// Reduces the quantity of an order which is executed.  
     ///
-    /// returns the AddOrder of which it was affected.   
+    /// returns a cloned AddOrder sitting on the orderbook.
+    /// In other words, AddOrder.quantity >= 0
     ///
     /// The put order is cloned and the same order may remain on the orderbook.
     ///

@@ -49,6 +49,8 @@ mod leg_side;
 pub use leg_side::LegSide;
 
 pub mod util;
+
+/// exports chrono
 pub use chrono;
 
 #[cfg(test)]
