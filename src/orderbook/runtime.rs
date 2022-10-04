@@ -40,6 +40,12 @@ pub trait OrderBookRunTimeCallback {
 
     #[allow(unused_variables)]
     #[inline]
+    fn second_message(&mut self, order_book_map: &HashMap<u64, OrderBook>, timestamp: &NaiveDateTime, second_messages: &[SecondTag]) {
+
+    }
+
+    #[allow(unused_variables)]
+    #[inline]
     fn order_book_id_with_changes(
         &mut self,
         order_book_map: &HashMap<u64, OrderBook>,
@@ -185,14 +191,16 @@ pub fn order_book_runtime<A>(
             modified_orders_map
         };
 
+        let mut second_messages = vec![];
+
         for msg in stack.clone() {
             if intrinsics::unlikely(callback.stop()) {
                 break 'outer;
             }
 
             match msg {
-                MessageEnum::SecondTag(_msg) => {
-                    // do nothing
+                MessageEnum::SecondTag(msg) => {
+                    second_messages.push(msg);
                 }
                 // this one creates order book
                 MessageEnum::ProductInfo(info) => {
@@ -341,6 +349,10 @@ pub fn order_book_runtime<A>(
                     //
                 }
             };
+        }
+
+        if !second_messages.is_empty() {
+            callback.second_message(&order_book_map, &timestamp, &second_messages)
         }
 
         if !executions.is_empty() {

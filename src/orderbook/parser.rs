@@ -28,7 +28,6 @@ pub async fn from_filepath(filepath: impl AsRef<Path>) -> JPXMBOParseResult {
         let file = File::open(filepath).await.unwrap();
         BufReader::new(file).lines()
     };
-    
     loop {
         match lines.next_line().await {
             Ok(Some(line)) => {

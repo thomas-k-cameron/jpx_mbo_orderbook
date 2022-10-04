@@ -34,7 +34,7 @@ pub struct OrderBook {
 }
 
 pub type PriceLevel = BTreeMap<i64, HashMap<u64, AddOrder>>;
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct PriceLevelView {
     pub price: i64,
     pub qty: i64,
