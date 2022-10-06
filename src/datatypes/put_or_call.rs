@@ -31,3 +31,15 @@ impl TryFrom<i8> for PutOrCall {
         }
     }
 }
+
+impl PutOrCall {
+    pub fn is_call(&self) -> bool {
+        matches!(self, PutOrCall::Call)
+    }
+    pub fn is_put(&self) -> bool {
+        matches!(self, PutOrCall::Put)
+    }
+    pub fn is_combo(&self) -> bool {
+        matches!(self, PutOrCall::Combo)
+    }
+}
