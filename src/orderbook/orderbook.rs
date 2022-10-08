@@ -1,12 +1,25 @@
-use serde::{Deserialize, Serialize};
+use std::collections::{
+    BTreeMap,
+    HashMap,
+};
+use std::ops::RangeBounds;
+
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use crate::{
-    AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
-    ProductInfo, Side, TickSize, TradingStatusInfo
-};
-use std::{
-    collections::{BTreeMap, HashMap},
-    ops::RangeBounds
+    AddOrder,
+    CombinationProduct,
+    DeleteOrder,
+    EquilibriumPrice,
+    Executed,
+    ExecutionWithPriceInfo,
+    ProductInfo,
+    Side,
+    TickSize,
+    TradingStatusInfo,
 };
 
 #[derive(Debug)]
@@ -218,9 +231,9 @@ impl OrderBook {
 
     /// Handles E message:
     /// Reduces the quantity of an order which is executed against.
-    /// 
+    ///
     /// returns a copy of AddOrder siting on the orderbook.
-    /// 
+    ///
     /// In other words, AddOrder.quantity >= 0
     pub fn executed(&mut self, e: &Executed) -> AddOrder {
         let tree = match e.side {

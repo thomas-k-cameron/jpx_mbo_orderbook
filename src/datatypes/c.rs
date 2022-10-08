@@ -1,13 +1,19 @@
 // automatically generated
-use crate::{
-    tag_guard,
-    util::{extract_datetime, extract_value_and_parse},
-    Side,
+use std::str::FromStr;
+
+use serde::{
+    Deserialize,
+    Serialize,
 };
 
-use serde::{Deserialize, Serialize};
-
-use std::str::FromStr;
+use crate::util::{
+    extract_datetime,
+    extract_value_and_parse,
+};
+use crate::{
+    tag_guard,
+    Side,
+};
 
 ///
 /// 6.4.3 価格情報付約定通知タグ （タグ ID ： C ）
@@ -44,7 +50,7 @@ pub struct ExecutionWithPriceInfo {
     /// - Y 板寄約定
     /// - N ザラバ約定
     /// ここでは、Y出合った場合にtrue, Nで会った場合にfalseとしている。
-    /// 
+    ///
     /// おそらく、Y == YES, N == NOと思われるため。知らんけど
     pub occurred_at_cross: bool,
     pub order_book_id: u64,
@@ -68,6 +74,7 @@ impl_message! {
 
 impl TryFrom<&str> for ExecutionWithPriceInfo {
     type Error = ();
+
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('C', s);
         let mut iter = s.split(",").skip(1);

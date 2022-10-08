@@ -11,7 +11,7 @@ pub struct CTagWithCorrespondingPTag {
     pub matched_add_order: AddOrder,
     pub paired_ctag: Option<ExecutionWithPriceInfo>,
     pub matched_add_order2: Option<AddOrder>,
-    pub p_tags: Vec<LegPrice>
+    pub p_tags: Vec<LegPrice>,
 }
 
 /// struct for order that were deleted

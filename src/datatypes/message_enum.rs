@@ -1,13 +1,26 @@
 #![allow(non_snake_case)]
 use std::str::FromStr;
 
-use crate::{
-    AddOrder, CombinationProduct, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo,
-    LegPrice, ProductInfo, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
+use chrono::NaiveDateTime;
+use serde::{
+    Deserialize,
+    Serialize,
 };
 
-use chrono::NaiveDateTime;
-use serde::{Deserialize, Serialize};
+use crate::{
+    AddOrder,
+    CombinationProduct,
+    DeleteOrder,
+    EquilibriumPrice,
+    Executed,
+    ExecutionWithPriceInfo,
+    LegPrice,
+    ProductInfo,
+    SecondTag,
+    SystemEventInfo,
+    TickSize,
+    TradingStatusInfo,
+};
 
 macro_rules! dclr_message_enum {
     ($($ident:ident,)*) => {

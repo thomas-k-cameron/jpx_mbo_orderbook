@@ -1,17 +1,15 @@
-use std::{
-    collections::{HashMap},
-    path::Path,
-};
+use std::collections::HashMap;
+use std::path::Path;
 
 use chrono::NaiveDateTime;
-use tokio::{
-    fs::File,
-    io::{AsyncBufReadExt, BufReader},
+use tokio::fs::File;
+use tokio::io::{
+    AsyncBufReadExt,
+    BufReader,
 };
+
+use crate::datatypes::*;
 use crate::MessageEnum;
-use crate::{datatypes::*};
-
-
 
 pub fn from_raw_file(file: String) -> JPXMBOParseResult {
     let mut parser = JPXMBOParser::default();
@@ -35,14 +33,13 @@ pub async fn from_filepath(filepath: impl AsRef<Path>) -> JPXMBOParseResult {
             }
             Err(e) => {
                 println!("{e}");
-                break
-            },
+                break;
+            }
             _ => break,
         };
     }
     parser.complete_parsing()
 }
-
 
 #[derive(Default, PartialEq, Eq)]
 pub struct JPXMBOParseResult {
@@ -56,7 +53,7 @@ pub struct JPXMBOParser {
     last_timestamp: NaiveDateTime,
     map: HashMap<NaiveDateTime, usize>,
     itch: Vec<(NaiveDateTime, Vec<MessageEnum>)>,
-    unknown: Vec<String>
+    unknown: Vec<String>,
 }
 
 impl JPXMBOParser {
@@ -66,7 +63,7 @@ impl JPXMBOParser {
             let file = File::open(filepath).await.unwrap();
             BufReader::new(file).lines()
         };
-    
+
         loop {
             match lines.next_line().await {
                 Ok(Some(line)) => {
@@ -74,21 +71,23 @@ impl JPXMBOParser {
                 }
                 Err(e) => {
                     println!("{e}");
-                    break
-                },
+                    break;
+                }
                 _ => break,
             };
         }
         parser
     }
+
     pub fn from_string(file: String) -> JPXMBOParser {
         let mut parser = JPXMBOParser::default();
         for row in file.split("\n").map(|i| i.to_string()) {
             parser.parse_line(row);
         }
-    
+
         parser
     }
+
     fn insert_temp(&mut self, timestamp: Option<NaiveDateTime>) {
         let timestamp = timestamp.unwrap_or(self.last_timestamp);
         match self.map.get(&timestamp) {
@@ -103,10 +102,11 @@ impl JPXMBOParser {
                 let mut vector = Vec::with_capacity(self.temp.len());
                 vector.append(&mut self.temp);
                 self.itch.push((timestamp, vector));
-                self.map.insert(timestamp, self.itch.len()-1);
+                self.map.insert(timestamp, self.itch.len() - 1);
             }
         };
     }
+
     pub fn parse_line(&mut self, s: String) {
         match MessageEnum::try_from(s) {
             Ok(i) => {
@@ -125,6 +125,7 @@ impl JPXMBOParser {
             Err(e) => self.unknown.push(e),
         }
     }
+
     pub fn complete_parsing(mut self) -> JPXMBOParseResult {
         self.insert_temp(None);
         self.itch.sort_by(|(a, _), (b, _)| a.cmp(b));

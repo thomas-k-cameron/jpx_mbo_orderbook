@@ -1,9 +1,16 @@
 // automatically generated
-use crate::{tag_guard, util::extract_datetime, Side};
-
-use serde::{Deserialize, Serialize};
-
 use std::str::FromStr;
+
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
+use crate::util::extract_datetime;
+use crate::{
+    tag_guard,
+    Side,
+};
 
 ///
 ///6.3.3 銘柄情報基本タグ コンビネーション取引銘柄 （タグ ID ： M）
@@ -44,6 +51,7 @@ impl_message! {
 
 impl TryFrom<&str> for CombinationProduct {
     type Error = ();
+
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('M', s);
         let mut iter = s.split(",").skip(1);

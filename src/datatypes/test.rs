@@ -1,6 +1,15 @@
 use crate::{
-    AddOrder, DeleteOrder, EquilibriumPrice, Executed, ExecutionWithPriceInfo, MessageEnum,
-    ProductInfo, SecondTag, SystemEventInfo, TickSize, TradingStatusInfo,
+    AddOrder,
+    DeleteOrder,
+    EquilibriumPrice,
+    Executed,
+    ExecutionWithPriceInfo,
+    MessageEnum,
+    ProductInfo,
+    SecondTag,
+    SystemEventInfo,
+    TickSize,
+    TradingStatusInfo,
 };
 
 #[test]

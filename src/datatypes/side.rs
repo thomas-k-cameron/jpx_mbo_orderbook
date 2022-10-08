@@ -1,6 +1,9 @@
 use std::str::FromStr;
 
-use serde::{Deserialize, Serialize};
+use serde::{
+    Deserialize,
+    Serialize,
+};
 #[derive(Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Serialize, Deserialize, Clone, Copy)]
 pub enum Side {
     Buy = 1,
@@ -15,6 +18,7 @@ impl Default for Side {
 
 impl TryFrom<char> for Side {
     type Error = ();
+
     fn try_from(c: char) -> Result<Self, ()> {
         match c {
             'B' => Ok(Side::Buy),
@@ -26,6 +30,7 @@ impl TryFrom<char> for Side {
 
 impl TryFrom<&str> for Side {
     type Error = ();
+
     fn try_from(s: &str) -> Result<Self, ()> {
         Side::from_str(s)
     }
@@ -43,6 +48,7 @@ impl From<bool> for Side {
 
 impl FromStr for Side {
     type Err = ();
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "B" | "66" => Ok(Side::Buy),

@@ -1,11 +1,16 @@
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
 use crate::Side;
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Serialize, Deserialize, Clone, Copy)]
 pub struct LegSide(Side);
 
 impl TryFrom<&str> for LegSide {
     type Error = String;
+
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "66" => Ok(LegSide(Side::Buy)),

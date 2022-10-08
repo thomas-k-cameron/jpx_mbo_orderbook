@@ -1,9 +1,14 @@
 // automatically generated
 
-use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-use crate::{tag_guard, util::extract_datetime};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
+use crate::tag_guard;
+use crate::util::extract_datetime;
 
 ///
 ///6.3.5 システムイベント情報タグ （タグ ID ： S ）
@@ -17,7 +22,7 @@ use crate::{tag_guard, util::extract_datetime};
 ///システムイベントの更新のタイミングで提供する。
 ///
 ///詳細は、4.2.6(4) 章を参照のこと。
-/// 
+///
 /// コード 項目設定値説明
 /// O メッセージ送信の開始。どの営業日も、このメッセージの送信から開始。
 /// C メッセージ送信の終了。どの営業日も、このメッセージの送信で終了。
@@ -36,6 +41,7 @@ impl_message! {
 
 impl TryFrom<&str> for SystemEventInfo {
     type Error = ();
+
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('S', s);
         let mut iter = s.split(",").skip(1);

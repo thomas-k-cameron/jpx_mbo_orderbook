@@ -1,7 +1,11 @@
 // automatically generated
 
-use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 use crate::tag_guard;
 
@@ -32,6 +36,7 @@ impl_message! {
 
 impl TryFrom<&str> for SecondTag {
     type Error = ();
+
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('T', s);
         let mut iter = s.split(",").skip(1);

@@ -1,13 +1,19 @@
 // automatically generated
-use crate::{
-    tag_guard,
-    util::{extract_datetime, extract_value_and_parse},
-    Side,
+use std::str::FromStr;
+
+use serde::{
+    Deserialize,
+    Serialize,
 };
 
-use serde::{Deserialize, Serialize};
-
-use std::str::FromStr;
+use crate::util::{
+    extract_datetime,
+    extract_value_and_parse,
+};
+use crate::{
+    tag_guard,
+    Side,
+};
 
 ///
 /// 6.4.4 削除注文タグ （タグ ID ： D ）

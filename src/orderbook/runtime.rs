@@ -1,24 +1,33 @@
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::Debug,
-    time::{Duration, SystemTime},
-    intrinsics,
+use std::collections::{
+    HashMap,
+    HashSet,
+};
+use std::fmt::Debug;
+use std::intrinsics;
+use std::time::{
+    Duration,
+    SystemTime,
 };
 
 use chrono::NaiveDateTime;
 
-use crate::MessageEnum;
-use crate::{datatypes::*, OrderBook};
-
 use crate::callback_datatype::*;
+use crate::datatypes::*;
+use crate::{
+    MessageEnum,
+    OrderBook,
+};
 
 pub trait OrderBookRunTimeCallback {
     // stops the runtime when true is returned
+    /// Called before event_start and before processing a message.
+    /// Stops processing any data once true is returned.
     #[inline(always)]
     fn stop(&mut self) -> bool {
         false
     }
 
+    /// Called before processing the message stack.
     #[allow(unused_variables)]
     #[inline]
     fn event_start(
@@ -28,6 +37,7 @@ pub trait OrderBookRunTimeCallback {
         stack: &[MessageEnum],
     ) {
     }
+    /// called after processing of the message stack is done.
     #[allow(unused_variables)]
     #[inline]
     fn event_end(
@@ -38,12 +48,18 @@ pub trait OrderBookRunTimeCallback {
     ) {
     }
 
+    /// called if a message stack contains T tag.
     #[allow(unused_variables)]
     #[inline]
-    fn second_message(&mut self, order_book_map: &HashMap<u64, OrderBook>, timestamp: &NaiveDateTime, second_messages: &[SecondTag]) {
-
+    fn second_message(
+        &mut self,
+        order_book_map: &HashMap<u64, OrderBook>,
+        timestamp: &NaiveDateTime,
+        second_messages: &[SecondTag],
+    ) {
     }
 
+    /// called if there was an A, E or D tag message in the message stack
     #[allow(unused_variables)]
     #[inline]
     fn order_book_id_with_changes(
@@ -56,7 +72,7 @@ pub trait OrderBookRunTimeCallback {
 
     #[allow(unused_variables)]
     #[inline]
-    /// called only when `E` tag message was received
+    /// called only if `E` tag was in the message stack
     fn executions(
         &mut self,
         order_book_map: &HashMap<u64, OrderBook>,
@@ -67,7 +83,7 @@ pub trait OrderBookRunTimeCallback {
 
     #[allow(unused_variables)]
     #[inline]
-    /// called only when `C` tag message was received
+    /// called only if `C` tag was in the message stack
     fn ctag_execution(
         &mut self,
         order_book_map: &HashMap<u64, OrderBook>,
@@ -78,7 +94,7 @@ pub trait OrderBookRunTimeCallback {
 
     #[allow(unused_variables)]
     #[inline]
-    /// called only when `D` tag message was received
+    /// called only if `D` tag was in the message stack
     fn deletions(
         &mut self,
         order_book_map: &HashMap<u64, OrderBook>,
@@ -90,7 +106,7 @@ pub trait OrderBookRunTimeCallback {
     #[allow(unused_variables)]
     #[inline]
     /// called when order(s) are modified  
-    /// modified orders are detected when message with d tag and a tag refers to the same unique_id
+    /// called if message stack has D tag message and A tag message with same unique_id
     fn modified_orders(
         &mut self,
         order_book_map: &HashMap<u64, OrderBook>,
@@ -101,6 +117,7 @@ pub trait OrderBookRunTimeCallback {
 
     #[allow(unused_variables)]
     #[inline]
+    /// Called when there are no messages left or stop returned true.
     fn all_done(
         &mut self,
         order_book_map: &HashMap<u64, OrderBook>,
@@ -110,6 +127,8 @@ pub trait OrderBookRunTimeCallback {
 
     #[allow(unused_variables)]
     #[inline]
+    /// prints statistics when after all_done is called.
+    /// this can be over riden.
     fn runtime_stats(&mut self, stats: RuntimeStats) {
         println!(
             "key count {}\nmessage count {}\ntime taken {:?}\n",
@@ -124,7 +143,6 @@ pub struct RuntimeStats {
     pub time_taken: Duration,
 }
 
-
 pub fn order_book_runtime<A>(
     order_book_map: &mut HashMap<u64, OrderBook>,
     mut key_as_timestamp: impl Iterator<Item = (NaiveDateTime, Vec<MessageEnum>)>,
@@ -138,7 +156,7 @@ pub fn order_book_runtime<A>(
             order_book_id, message
         )
     }
-    
+
     let mut ts = None;
     let mut message_count = 0;
     let mut key_count = 0;
@@ -146,13 +164,13 @@ pub fn order_book_runtime<A>(
     // list of all order book id who had something changes to price levels
     let mut changes = HashSet::new();
     'outer: while let Some((timestamp, stack)) = key_as_timestamp.next() {
-        if intrinsics::unlikely(callback.stop())  {
+        if intrinsics::unlikely(callback.stop()) {
             break 'outer;
         }
 
         message_count += stack.len();
         key_count += 1;
-        
+
         ts.replace(timestamp);
         changes.clear();
         // sort stack
@@ -308,13 +326,13 @@ pub fn order_book_runtime<A>(
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
                         .c_executed(&msg);
-                    
+
                     'a: {
                         for i in executed_with_price_info.iter_mut() {
                             if i.c_tag.match_id == msg.match_id {
-                                i.paired_ctag.replace(msg); 
+                                i.paired_ctag.replace(msg);
                                 i.matched_add_order2.replace(add_order);
-                                break 'a
+                                break 'a;
                             }
                         }
                         executed_with_price_info.push(CTagWithCorrespondingPTag {
@@ -334,16 +352,14 @@ pub fn order_book_runtime<A>(
                         unreachable!("{} => {:?}", msg.combination_order_book_id, msg);
                     };
                 }
-                MessageEnum::LegPrice(msg) => {
-                    'a: {
-                        for i in executed_with_price_info.iter_mut() {
-                            if msg.combo_group_id == i.c_tag.combo_group_id {
-                                i.p_tags.push(msg);
-                                break 'a;
-                            }
-                        };
-                        unreachable!("CTagWithCorrespondingPTag not found for LegPrice {msg:#?}\n");
+                MessageEnum::LegPrice(msg) => 'a: {
+                    for i in executed_with_price_info.iter_mut() {
+                        if msg.combo_group_id == i.c_tag.combo_group_id {
+                            i.p_tags.push(msg);
+                            break 'a;
+                        }
                     }
+                    unreachable!("CTagWithCorrespondingPTag not found for LegPrice {msg:#?}\n");
                 }
                 MessageEnum::SystemEventInfo(_msg) => {
                     //

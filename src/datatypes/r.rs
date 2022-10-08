@@ -1,10 +1,18 @@
 // automatically generated
 
-use serde::{Deserialize, Serialize};
-
 use std::str::FromStr;
 
-use crate::{tag_guard, util::extract_datetime, FinancialProduct, PutOrCall};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
+use crate::util::extract_datetime;
+use crate::{
+    tag_guard,
+    FinancialProduct,
+    PutOrCall,
+};
 
 ///
 /// 6.3.2 銘柄情報基本タグ （タグ ID ： R ）  
@@ -54,6 +62,7 @@ impl_message! {
 
 impl TryFrom<&str> for ProductInfo {
     type Error = ();
+
     //parse_row!(@ parse_r, ["_","timestamp","order_book_id","symbol","long_name","_reserved","financial_product","_trading_currency","number_of_decimal_in_price","_nominal_value",
     // "_odd_lot_size","_round_lot_size","_block_lot_size","_nominal_value","number_of_legs","underlying_order_book_id","strike_price","expiration_date","number_of_decimals_in_strike_price","put_or_call"]);
     //R,2021-03-30T21:14:49.816929242(1617138889816929242),590334,FUT_NK225M_2109,166090019,166090019,3,JPY,4,0,0,1,0,0,0,510,0,20210910,0,0

@@ -1,5 +1,9 @@
-use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+
+use serde::{
+    Deserialize,
+    Serialize,
+};
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone, Copy)]
 pub enum PutOrCall {
@@ -10,6 +14,7 @@ pub enum PutOrCall {
 
 impl FromStr for PutOrCall {
     type Err = ();
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             "1" | "CAL" => PutOrCall::Call,
@@ -22,6 +27,7 @@ impl FromStr for PutOrCall {
 
 impl TryFrom<i8> for PutOrCall {
     type Error = ();
+
     fn try_from(int: i8) -> Result<Self, Self::Error> {
         match int {
             1 => Ok(PutOrCall::Call),
@@ -36,9 +42,11 @@ impl PutOrCall {
     pub fn is_call(&self) -> bool {
         matches!(self, PutOrCall::Call)
     }
+
     pub fn is_put(&self) -> bool {
         matches!(self, PutOrCall::Put)
     }
+
     pub fn is_combo(&self) -> bool {
         matches!(self, PutOrCall::Combo)
     }

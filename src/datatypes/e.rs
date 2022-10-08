@@ -1,13 +1,19 @@
 // automatically generated
-use crate::{
-    tag_guard,
-    util::{extract_datetime, extract_value_and_parse},
-    Side,
+use std::str::FromStr;
+
+use serde::{
+    Deserialize,
+    Serialize,
 };
 
-use serde::{Deserialize, Serialize};
-
-use std::str::FromStr;
+use crate::util::{
+    extract_datetime,
+    extract_value_and_parse,
+};
+use crate::{
+    tag_guard,
+    Side,
+};
 
 ///
 ///6.4.2 約定通知タグ （タグ ID ： E ）
@@ -47,6 +53,7 @@ impl_message! {
 
 impl TryFrom<&str> for Executed {
     type Error = ();
+
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('E', s);
         let mut iter = s.split(",").skip(1);

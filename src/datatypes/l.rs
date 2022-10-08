@@ -1,12 +1,16 @@
 // automatically generated
 
-use serde::{Deserialize, Serialize};
-
 use std::str::FromStr;
 
-use crate::{
-    tag_guard,
-    util::{extract_datetime, extract_value_and_parse},
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
+use crate::tag_guard;
+use crate::util::{
+    extract_datetime,
+    extract_value_and_parse,
 };
 
 ///
@@ -39,6 +43,7 @@ impl_message! {
 
 impl TryFrom<&str> for TickSize {
     type Error = ();
+
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('L', s);
         let mut iter = s.split(",").skip(1);

@@ -1,5 +1,9 @@
+use std::str::{
+    self,
+    FromStr,
+};
+
 use chrono::NaiveDateTime;
-use std::str::{self, FromStr};
 
 pub fn extract_value<'a>(s: &'a str) -> Option<&'a str> {
     for (a, b) in s.find("(").zip(s.find(")")) {

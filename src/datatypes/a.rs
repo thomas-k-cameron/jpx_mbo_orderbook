@@ -1,10 +1,19 @@
 // automatically generated
-use crate::{tag_guard, Side};
-
-use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-use super::util::{extract_datetime, extract_value};
+use serde::{
+    Deserialize,
+    Serialize,
+};
+
+use super::util::{
+    extract_datetime,
+    extract_value,
+};
+use crate::{
+    tag_guard,
+    Side,
+};
 
 ///
 ///6.4.1 新規注文タグ （タグ ID ： A ）
@@ -44,6 +53,7 @@ impl_message! {
 
 impl TryFrom<&str> for AddOrder {
     type Error = ();
+
     //(s: &str, row_no: i64, filename: i64)
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('A', s);

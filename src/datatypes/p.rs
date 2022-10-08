@@ -1,12 +1,16 @@
 // automatically generated
-use crate::{
-    tag_guard,
-    util::{extract_datetime, extract_value_and_parse},
+use std::str::FromStr;
+
+use serde::{
+    Deserialize,
+    Serialize,
 };
 
-use serde::{Deserialize, Serialize};
-
-use std::str::FromStr;
+use crate::tag_guard;
+use crate::util::{
+    extract_datetime,
+    extract_value_and_parse,
+};
 
 ///
 /// 6.4.5 建値通知タグ （タグ ID ： P ）
@@ -48,6 +52,7 @@ impl_message! {
 
 impl TryFrom<&str> for LegPrice {
     type Error = ();
+
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         tag_guard!('P', s);
         let mut iter = s.split(",").skip(1);
