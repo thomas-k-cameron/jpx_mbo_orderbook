@@ -131,7 +131,7 @@ pub trait OrderBookRunTimeCallback {
     /// this can be over riden.
     fn runtime_stats(&mut self, stats: RuntimeStats) {
         println!(
-            "key count {}\nmessage count {}\ntime taken {:?}\n",
+            "processed key count {}\nprocesssed message count {}\ntime taken {:?}\n",
             stats.key_count, stats.message_count, stats.time_taken
         );
     }
