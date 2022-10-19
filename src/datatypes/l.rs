@@ -26,7 +26,7 @@ use crate::util::{
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct TickSize {
     pub timestamp: NaiveDateTime,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub price_from: i64,
     pub price_to: i64,
     pub tick_size: i64,
@@ -35,7 +35,7 @@ pub struct TickSize {
 impl_message! {
     name: TickSize 'L';
     pub timestamp: NaiveDateTime,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub price_from: i64,
     pub price_to: i64,
     pub tick_size: i64,

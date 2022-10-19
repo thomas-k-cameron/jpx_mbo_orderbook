@@ -11,7 +11,7 @@ use crate::{
 /// Orders are uniquely identified by its order_id, order_book_id and it's side (Buy Or Sell)
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Clone, Copy, Default)]
 pub struct UniqueId {
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub order_id: u64,
     pub side: Side,
 }

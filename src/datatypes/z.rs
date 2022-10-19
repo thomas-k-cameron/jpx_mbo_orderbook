@@ -29,7 +29,7 @@ pub struct EquilibriumPrice {
     pub ask_qty_at_ep: i64,
     pub bid_qty_at_ep: i64,
     pub ep: i64,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
 }
 
 impl_message! {
@@ -38,7 +38,7 @@ impl_message! {
     pub ask_qty_at_ep: i64,
     pub bid_qty_at_ep: i64,
     pub ep: i64,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
 }
 
 impl TryFrom<&str> for EquilibriumPrice {

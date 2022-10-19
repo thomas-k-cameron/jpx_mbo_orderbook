@@ -35,7 +35,7 @@ pub struct Executed {
     pub combo_group_id: i64,
     pub executed_quantity: i64,
     pub match_id: String,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub order_id: u64,
     pub side: Side,
 }
@@ -46,7 +46,7 @@ impl_message! {
     pub combo_group_id: i64,
     pub executed_quantity: i64,
     pub match_id: String,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub order_id: u64,
     pub side: Side,
 }

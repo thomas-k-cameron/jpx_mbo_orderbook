@@ -34,7 +34,7 @@ pub struct LegPrice {
     pub combo_group_id: i64,
     pub match_id: u64,
     pub occurred_at_cross: bool,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub quantity: i64,
     pub trade_price: i64,
 }
@@ -45,7 +45,7 @@ impl_message! {
     pub combo_group_id: i64,
     pub match_id: u64,
     pub occurred_at_cross: bool,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub quantity: i64,
     pub trade_price: i64,
 }

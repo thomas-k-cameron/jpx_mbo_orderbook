@@ -32,7 +32,7 @@ use crate::{
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone, Copy)]
 pub struct AddOrder {
     pub timestamp: NaiveDateTime,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub order_book_position: i64,
     pub order_id: u64,
     pub price: i64,
@@ -43,7 +43,7 @@ pub struct AddOrder {
 impl_message! {
     name: AddOrder 'A';
     pub timestamp: NaiveDateTime,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub order_book_position: i64,
     pub order_id: u64,
     pub price: i64,

@@ -37,11 +37,11 @@ pub struct ProductInfo {
     pub number_of_decimal_in_price: i64,
     pub number_of_decimals_in_strike_price: i64,
     pub number_of_legs: i64,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub put_or_call: PutOrCall,
     pub strike_price: i64,
     pub symbol: String,
-    pub underlying_order_book_id: u64,
+    pub underlying_order_book_id: i64,
 }
 
 impl_message! {
@@ -53,11 +53,11 @@ impl_message! {
     pub number_of_decimal_in_price: i64,
     pub number_of_decimals_in_strike_price: i64,
     pub number_of_legs: i64,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub put_or_call: PutOrCall,
     pub strike_price: i64,
     pub symbol: String,
-    pub underlying_order_book_id: u64,
+    pub underlying_order_book_id: i64,
 }
 
 impl TryFrom<&str> for ProductInfo {

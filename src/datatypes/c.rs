@@ -53,7 +53,7 @@ pub struct ExecutionWithPriceInfo {
     ///
     /// おそらく、Y == YES, N == NOと思われるため。知らんけど
     pub occurred_at_cross: bool,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub order_id: u64,
     pub side: Side,
     pub trade_price: i64,
@@ -66,7 +66,7 @@ impl_message! {
     pub executed_quantity: i64,
     pub match_id: u64,
     pub occurred_at_cross: bool,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub order_id: u64,
     pub side: Side,
     pub trade_price: i64,

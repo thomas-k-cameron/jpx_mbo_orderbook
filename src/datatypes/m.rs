@@ -34,8 +34,8 @@ use crate::{
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct CombinationProduct {
     pub timestamp: NaiveDateTime,
-    pub combination_order_book_id: u64,
-    pub leg_order_book_id: u64,
+    pub combination_order_book_id: i64,
+    pub leg_order_book_id: i64,
     pub leg_ratio: i64,
     pub leg_side: Side,
 }
@@ -43,8 +43,8 @@ pub struct CombinationProduct {
 impl_message! {
     name: CombinationProduct 'M';
     pub timestamp: NaiveDateTime,
-    pub combination_order_book_id: u64,
-    pub leg_order_book_id: u64,
+    pub combination_order_book_id: i64,
+    pub leg_order_book_id: i64,
     pub leg_ratio: i64,
     pub leg_side: Side,
 }

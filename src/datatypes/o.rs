@@ -28,14 +28,14 @@ use crate::util::{
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
 pub struct TradingStatusInfo {
     pub timestamp: NaiveDateTime,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub state_name: String,
 }
 
 impl_message! {
     name: TradingStatusInfo 'O';
     pub timestamp: NaiveDateTime,
-    pub order_book_id: u64,
+    pub order_book_id: i64,
     pub state_name: String,
 }
 
