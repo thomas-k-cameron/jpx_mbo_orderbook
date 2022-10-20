@@ -36,7 +36,7 @@ pub struct Executed {
     pub executed_quantity: i64,
     pub match_id: String,
     pub order_book_id: i64,
-    pub order_id: u64,
+    pub order_id: i64,
     pub side: Side,
 }
 
@@ -47,7 +47,7 @@ impl_message! {
     pub executed_quantity: i64,
     pub match_id: String,
     pub order_book_id: i64,
-    pub order_id: u64,
+    pub order_id: i64,
     pub side: Side,
 }
 

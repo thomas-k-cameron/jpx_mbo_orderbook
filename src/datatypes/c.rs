@@ -44,7 +44,7 @@ pub struct ExecutionWithPriceInfo {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
     pub executed_quantity: i64,
-    pub match_id: u64,
+    pub match_id: i64,
     /// 板寄せ約定判別フラグ
     /// コード 項目設定値説明
     /// - Y 板寄約定
@@ -54,7 +54,7 @@ pub struct ExecutionWithPriceInfo {
     /// おそらく、Y == YES, N == NOと思われるため。知らんけど
     pub occurred_at_cross: bool,
     pub order_book_id: i64,
-    pub order_id: u64,
+    pub order_id: i64,
     pub side: Side,
     pub trade_price: i64,
 }
@@ -64,10 +64,10 @@ impl_message! {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
     pub executed_quantity: i64,
-    pub match_id: u64,
+    pub match_id: i64,
     pub occurred_at_cross: bool,
     pub order_book_id: i64,
-    pub order_id: u64,
+    pub order_id: i64,
     pub side: Side,
     pub trade_price: i64,
 }

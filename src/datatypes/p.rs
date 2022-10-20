@@ -32,7 +32,7 @@ use crate::util::{
 pub struct LegPrice {
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
-    pub match_id: u64,
+    pub match_id: i64,
     pub occurred_at_cross: bool,
     pub order_book_id: i64,
     pub quantity: i64,
@@ -43,7 +43,7 @@ impl_message! {
     name: LegPrice 'P';
     pub timestamp: NaiveDateTime,
     pub combo_group_id: i64,
-    pub match_id: u64,
+    pub match_id: i64,
     pub occurred_at_cross: bool,
     pub order_book_id: i64,
     pub quantity: i64,

@@ -34,7 +34,7 @@ pub struct OrderBook {
     /// orders are identifiable with their id and side.
     /// Orders with same id could exists on the other side of the orderbook.
     /// index to map orders
-    pub orders: HashMap<(u64, Side), i64>, // id => price
+    pub orders: HashMap<(i64, Side), i64>, // id => price
     /// key is the price, embeded map's key is the order id of the value's put order
     /// price => {id: AddOrder}
     pub ask: PriceLevel,
@@ -46,7 +46,7 @@ pub struct OrderBook {
     pub trading_status: Vec<TradingStatusInfo>,
 }
 
-pub type PriceLevel = BTreeMap<i64, HashMap<u64, AddOrder>>;
+pub type PriceLevel = BTreeMap<i64, HashMap<i64, AddOrder>>;
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct PriceLevelView {
     pub price: i64,
@@ -73,7 +73,7 @@ impl OrderBook {
     }
 
     /// fetches a single order from OrderBook
-    pub fn order(&self, order_id: &u64, side: &Side) -> Option<&AddOrder> {
+    pub fn order(&self, order_id: &i64, side: &Side) -> Option<&AddOrder> {
         let half = match side {
             Side::Buy => &self.ask,
             Side::Sell => &self.bid,
@@ -148,7 +148,7 @@ impl OrderBook {
     }
 
     /// returns order_book_id
-    pub fn order_book_id(&self) -> u64 {
+    pub fn order_book_id(&self) -> i64 {
         self.product_info.order_book_id
     }
 

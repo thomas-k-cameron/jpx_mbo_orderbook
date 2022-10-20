@@ -31,7 +31,7 @@ use crate::{
 pub struct DeleteOrder {
     pub timestamp: NaiveDateTime,
     pub order_book_id: i64,
-    pub order_id: u64,
+    pub order_id: i64,
     pub side: Side,
 }
 
@@ -39,7 +39,7 @@ impl_message! {
     name: DeleteOrder 'D';
     pub timestamp: NaiveDateTime,
     pub order_book_id: i64,
-    pub order_id: u64,
+    pub order_id: i64,
     pub side: Side,
 }
 

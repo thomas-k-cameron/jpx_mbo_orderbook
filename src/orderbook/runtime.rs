@@ -32,7 +32,7 @@ pub trait OrderBookRunTimeCallback {
     #[inline]
     fn event_start(
         &mut self,
-        order_book_map: &HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<i64, OrderBook>,
         timestamp: &NaiveDateTime,
         stack: &[MessageEnum],
     ) {
@@ -42,7 +42,7 @@ pub trait OrderBookRunTimeCallback {
     #[inline]
     fn event_end(
         &mut self,
-        order_book_map: &HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<i64, OrderBook>,
         timestamp: &NaiveDateTime,
         stack: &[MessageEnum],
     ) {
@@ -53,7 +53,7 @@ pub trait OrderBookRunTimeCallback {
     #[inline]
     fn second_message(
         &mut self,
-        order_book_map: &HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<i64, OrderBook>,
         timestamp: &NaiveDateTime,
         second_messages: &[SecondTag],
     ) {
@@ -64,9 +64,9 @@ pub trait OrderBookRunTimeCallback {
     #[inline]
     fn order_book_id_with_changes(
         &mut self,
-        order_book_map: &HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<i64, OrderBook>,
         timestamp: &NaiveDateTime,
-        changes: &HashSet<u64>,
+        changes: &HashSet<i64>,
     ) {
     }
 
@@ -75,7 +75,7 @@ pub trait OrderBookRunTimeCallback {
     /// called only if `E` tag was in the message stack
     fn executions(
         &mut self,
-        order_book_map: &HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<i64, OrderBook>,
         timestamp: &NaiveDateTime,
         executions: Vec<OrderExecution>,
     ) {
@@ -86,7 +86,7 @@ pub trait OrderBookRunTimeCallback {
     /// called only if `C` tag was in the message stack
     fn ctag_execution(
         &mut self,
-        order_book_map: &HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<i64, OrderBook>,
         timestamp: &NaiveDateTime,
         executed_with_price_info: Vec<CTagWithCorrespondingPTag>,
     ) {
@@ -97,7 +97,7 @@ pub trait OrderBookRunTimeCallback {
     /// called only if `D` tag was in the message stack
     fn deletions(
         &mut self,
-        order_book_map: &HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<i64, OrderBook>,
         timestamp: &NaiveDateTime,
         deletion: Vec<OrderDeletion>,
     ) {
@@ -109,7 +109,7 @@ pub trait OrderBookRunTimeCallback {
     /// called if message stack has D tag message and A tag message with same unique_id
     fn modified_orders(
         &mut self,
-        order_book_map: &HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<i64, OrderBook>,
         timestamp: &NaiveDateTime,
         modified_orders: Vec<ModifiedOrder>,
     ) {
@@ -120,20 +120,9 @@ pub trait OrderBookRunTimeCallback {
     /// Called when there are no messages left or stop returned true.
     fn all_done(
         &mut self,
-        order_book_map: &HashMap<u64, OrderBook>,
+        order_book_map: &HashMap<i64, OrderBook>,
         timestamp: Option<NaiveDateTime>,
     ) {
-    }
-
-    #[allow(unused_variables)]
-    #[inline]
-    /// prints statistics when after all_done is called.
-    /// this can be over riden.
-    fn runtime_stats(&mut self, stats: RuntimeStats) {
-        println!(
-            "processed key count {}\nprocesssed message count {}\ntime taken {:?}\n",
-            stats.key_count, stats.message_count, stats.time_taken
-        );
     }
 }
 
@@ -144,13 +133,13 @@ pub struct RuntimeStats {
 }
 
 pub fn order_book_runtime<A>(
-    order_book_map: &mut HashMap<u64, OrderBook>,
+    order_book_map: &mut HashMap<i64, OrderBook>,
     mut key_as_timestamp: impl Iterator<Item = (NaiveDateTime, Vec<MessageEnum>)>,
     callback: &mut A,
-) where
+) -> RuntimeStats  where
     A: OrderBookRunTimeCallback,
 {
-    fn err_msg(order_book_id: u64, message: impl Debug) -> String {
+    fn err_msg(order_book_id: i64, message: impl Debug) -> String {
         format!(
             "error when retreiving {}: MessageSnapshot: {:?}",
             order_book_id, message
@@ -414,9 +403,9 @@ pub fn order_book_runtime<A>(
 
     callback.all_done(order_book_map, ts);
     let time_taken = now.elapsed().unwrap();
-    callback.runtime_stats(RuntimeStats {
+    RuntimeStats {
         message_count,
         time_taken,
         key_count,
-    });
+    }
 }

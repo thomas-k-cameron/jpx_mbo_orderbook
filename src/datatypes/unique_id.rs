@@ -12,7 +12,7 @@ use crate::{
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Serialize, Clone, Copy, Default)]
 pub struct UniqueId {
     pub order_book_id: i64,
-    pub order_id: u64,
+    pub order_id: i64,
     pub side: Side,
 }
 
