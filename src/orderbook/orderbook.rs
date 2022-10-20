@@ -96,7 +96,7 @@ impl OrderBook {
             Side::Sell => &self.ask,
         };
         let mut opts = None;
-        for i in half.get(&price) {
+        if let Some(i) = half.get(&price) {
             let qty = i.iter().fold(0, |qty, (_, add)| qty + add.quantity);
             let v = PriceLevelView { qty, price };
             opts.replace(v);
@@ -162,11 +162,11 @@ impl OrderBook {
             Side::Buy => &self.bid,
             Side::Sell => &self.ask,
         };
-        for i in book.get(&price) {
-            return Some(i.iter().fold(0, |a, (_, b)| a + b.quantity));
+        if let Some(i) = book.get(&price) {
+            Some(i.iter().fold(0, |a, (_, b)| a + b.quantity))
+        } else {
+            None
         }
-
-        None
     }
 
     /// handles delete order message.
@@ -218,15 +218,8 @@ impl OrderBook {
         }
 
         tree.entry(a.price)
-            .and_modify(|t| {
-                let opts = t.insert(a.order_id, a);
-                assert!(opts.is_none());
-            })
-            .or_insert({
-                let mut t = HashMap::new();
-                t.insert(a.order_id, a);
-                t
-            });
+            .or_default()
+            .insert(a.order_id, a);
     }
 
     /// Handles E message:
