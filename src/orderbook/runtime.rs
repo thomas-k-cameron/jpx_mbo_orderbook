@@ -207,12 +207,12 @@ pub fn order_book_runtime<A>(
 
             match msg {
                 MessageEnum::SecondTag(msg) => {
-                    second_messages.push(msg);
+                    second_messages.push(*msg);
                 }
                 // this one creates order book
                 MessageEnum::ProductInfo(info) => {
                     let order_book_id = info.order_book_id;
-                    let check = order_book_map.insert(order_book_id, OrderBook::new(info));
+                    let check = order_book_map.insert(order_book_id, OrderBook::new(*info));
                     match check {
                         Some(ob) => {
                             // check if the product_info is pointing at the same instrument
@@ -239,7 +239,7 @@ pub fn order_book_runtime<A>(
                     let book = order_book_map.get_mut(&msg.order_book_id);
 
                     if let Some(book) = book {
-                        book.push_trading_status(msg);
+                        book.push_trading_status(*msg);
                     } else {
                         println!("{}", err_msg(msg.order_book_id, &msg));
                     };
@@ -248,13 +248,13 @@ pub fn order_book_runtime<A>(
                     order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
-                        .append_l(msg);
+                        .append_l(*msg);
                 }
                 MessageEnum::EquilibriumPrice(msg) => {
                     let check = order_book_map.get_mut(&msg.order_book_id);
 
                     if let Some(book) = check {
-                        book.push_last_equilibrium_price(msg);
+                        book.push_last_equilibrium_price(*msg);
                     } else {
                         eprintln!("{}", err_msg(msg.order_book_id, &msg));
                     }
@@ -262,7 +262,7 @@ pub fn order_book_runtime<A>(
                 // order CRUD. New order insertion, deletion, execution (reduction of order qty)
                 MessageEnum::AddOrder(msg) => {
                     changes.insert(msg.order_book_id);
-                    let id = (&msg).try_into().unwrap();
+                    let id = (&*msg).try_into().unwrap();
                     if modified_order_id_map.contains_key(&id) {
                         modified_order_id_map.entry(id).and_modify(|opts| {
                             opts.0.replace(msg.clone());
@@ -271,7 +271,7 @@ pub fn order_book_runtime<A>(
                     order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
-                        .add(msg);
+                        .add(*msg);
                 }
                 MessageEnum::DeleteOrder(msg) => {
                     changes.insert(msg.order_book_id);
@@ -282,7 +282,7 @@ pub fn order_book_runtime<A>(
                         .delete(&msg);
 
                     // modify
-                    let id = (&msg).try_into().unwrap();
+                    let id = (&*msg).try_into().unwrap();
                     if modified_order_id_map.contains_key(&id) {
                         modified_order_id_map.entry(id).and_modify(|opts| {
                             opts.1.replace(msg);
@@ -292,7 +292,7 @@ pub fn order_book_runtime<A>(
                         // deletion
                         let item = OrderDeletion {
                             deleted_order: add_order,
-                            msg,
+                            msg: *msg,
                         };
                         deletion.push(item);
                     }
@@ -305,7 +305,7 @@ pub fn order_book_runtime<A>(
                         .executed(&msg);
                     let item = OrderExecution {
                         matched_order_after_execution: add_order,
-                        msg,
+                        msg: *msg,
                     };
                     executions.push(item);
                 }
@@ -319,13 +319,13 @@ pub fn order_book_runtime<A>(
                     'a: {
                         for i in executed_with_price_info.iter_mut() {
                             if i.c_tag.match_id == msg.match_id {
-                                i.paired_ctag.replace(msg);
+                                i.paired_ctag.replace(*msg);
                                 i.matched_add_order2.replace(add_order);
                                 break 'a;
                             }
                         }
                         executed_with_price_info.push(CTagWithCorrespondingPTag {
-                            c_tag: msg,
+                            c_tag: *msg,
                             paired_ctag: None,
                             p_tags: Vec::with_capacity(2),
                             matched_add_order: add_order,
@@ -336,7 +336,7 @@ pub fn order_book_runtime<A>(
                 // things that I don't know what to do with
                 MessageEnum::CombinationProduct(msg) => {
                     if let Some(book) = order_book_map.get_mut(&msg.combination_order_book_id) {
-                        book.push_combination_orderbook(msg)
+                        book.push_combination_orderbook(*msg)
                     } else {
                         unreachable!("{} => {:?}", msg.combination_order_book_id, msg);
                     };
@@ -344,7 +344,7 @@ pub fn order_book_runtime<A>(
                 MessageEnum::LegPrice(msg) => 'a: {
                     for i in executed_with_price_info.iter_mut() {
                         if msg.combo_group_id == i.c_tag.combo_group_id {
-                            i.p_tags.push(msg);
+                            i.p_tags.push(*msg);
                             break 'a;
                         }
                     }
@@ -384,8 +384,8 @@ pub fn order_book_runtime<A>(
 
                 let ord = ModifiedOrder {
                     id,
-                    modify_msg,
-                    delete_msg,
+                    modify_msg: *modify_msg,
+                    delete_msg: *delete_msg,
                     previous_add_order,
                 };
                 modified_orders.push(ord);

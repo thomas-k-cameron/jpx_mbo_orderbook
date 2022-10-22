@@ -27,9 +27,8 @@ macro_rules! dclr_message_enum {
         #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, PartialOrd, Hash, Ord, Clone)]
         #[serde(tag = "tag")]
         pub enum MessageEnum {
-            $( $ident($ident), )*
+            $( $ident(Box<$ident>), )*
         }
-
         impl MessageEnum {
 
             pub fn tag(&self) -> char {
@@ -50,7 +49,7 @@ macro_rules! dclr_message_enum {
                 type Error = &'static str;
                 fn try_from(msg_enum: MessageEnum) -> Result<Self, Self::Error> {
                     match msg_enum {
-                        MessageEnum::$ident(item) => Ok(item),
+                        MessageEnum::$ident(item) => Ok(*item),
                         _ => Err(stringify!($ident))
                     }
                 }
@@ -62,7 +61,7 @@ macro_rules! dclr_message_enum {
             fn try_from(string: String) -> Result<Self, Self::Error> {
                 $(
                     if let Ok(i) = $ident::try_from(string.as_str()) {
-                        return Ok(MessageEnum::$ident(i))
+                        return Ok(MessageEnum::$ident(box i))
                     }
                 ) *
                 return Err(string)
@@ -74,7 +73,7 @@ macro_rules! dclr_message_enum {
             fn from_str(string: &str) -> Result<Self, Self::Err> {
                 $(
                     if let Ok(i) = $ident::try_from(string) {
-                        return Ok(MessageEnum::$ident(i))
+                        return Ok(MessageEnum::$ident(box i))
                     }
                 ) *
                 return Err(string.to_string())
