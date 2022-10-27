@@ -1,11 +1,12 @@
 use crate::datatypes::*;
 
+#[derive(Clone)]
 pub struct OrderExecution {
     pub matched_order_after_execution: AddOrder,
     pub msg: Executed,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CTagWithCorrespondingPTag {
     pub c_tag: ExecutionWithPriceInfo,
     pub matched_add_order: AddOrder,
@@ -15,11 +16,13 @@ pub struct CTagWithCorrespondingPTag {
 }
 
 /// struct for order that were deleted
+#[derive(Clone)]
 pub struct OrderDeletion {
     pub deleted_order: AddOrder,
     pub msg: DeleteOrder,
 }
 
+#[derive(Clone)]
 pub struct ModifiedOrder {
     pub id: UniqueId,
     /// corresponding d tag
