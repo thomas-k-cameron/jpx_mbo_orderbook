@@ -217,9 +217,7 @@ impl OrderBook {
             unreachable!("\n{this:#?}\n{:#?}\n{i:#?}\n{a:#?}", self.product_info)
         }
 
-        tree.entry(a.price)
-            .or_default()
-            .insert(a.order_id, a);
+        tree.entry(a.price).or_default().insert(a.order_id, a);
     }
 
     /// Handles E message:

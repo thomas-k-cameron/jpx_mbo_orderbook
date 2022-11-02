@@ -136,7 +136,8 @@ pub fn order_book_runtime<A>(
     order_book_map: &mut HashMap<i64, OrderBook>,
     mut key_as_timestamp: impl Iterator<Item = (NaiveDateTime, Vec<MessageEnum>)>,
     callback: &mut A,
-) -> RuntimeStats  where
+) -> RuntimeStats
+where
     A: OrderBookRunTimeCallback,
 {
     fn err_msg(order_book_id: i64, message: impl Debug) -> String {
@@ -318,18 +319,16 @@ pub fn order_book_runtime<A>(
 
                     'a: {
                         for i in executed_with_price_info.iter_mut() {
-                            if i.c_tag.match_id == msg.match_id {
-                                i.paired_ctag.replace(*msg);
-                                i.matched_add_order2.replace(add_order);
+                            if i.match_id == msg.match_id {
+                                i.c_tag.push((*msg).clone());
                                 break 'a;
                             }
                         }
                         executed_with_price_info.push(CTagWithCorrespondingPTag {
-                            c_tag: *msg,
-                            paired_ctag: None,
+                            match_id: msg.match_id,
+                            c_tag: vec![(*msg).clone()],
+                            matched_add_order: vec![add_order],
                             p_tags: Vec::with_capacity(2),
-                            matched_add_order: add_order,
-                            matched_add_order2: None,
                         });
                     };
                 }
@@ -343,12 +342,17 @@ pub fn order_book_runtime<A>(
                 }
                 MessageEnum::LegPrice(msg) => 'a: {
                     for i in executed_with_price_info.iter_mut() {
-                        if msg.combo_group_id == i.c_tag.combo_group_id {
+                        if msg.match_id == i.match_id {
                             i.p_tags.push(*msg);
                             break 'a;
                         }
                     }
-                    unreachable!("CTagWithCorrespondingPTag not found for LegPrice {msg:#?}\n");
+                    executed_with_price_info.push(CTagWithCorrespondingPTag {
+                        match_id: msg.match_id,
+                        c_tag: vec![],
+                        matched_add_order: vec![],
+                        p_tags: vec![*msg],
+                    });
                 }
                 MessageEnum::SystemEventInfo(_msg) => {
                     //
