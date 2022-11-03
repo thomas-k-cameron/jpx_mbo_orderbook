@@ -27,7 +27,9 @@ impl CTagWithCorrespondingPTag {
         map
     }
     pub fn executed_quantity(&self) -> i64 {
-        self._test();
+        if cfg!(test) {
+            self._test();
+        }
         if self.c_tag.len() > 1 {
             self.c_tag.iter().filter(|i| i.side == Side::Buy).fold(0, |a, b| a + b.executed_quantity)
         } else {
