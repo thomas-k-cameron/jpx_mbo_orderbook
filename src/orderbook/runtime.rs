@@ -319,13 +319,13 @@ where
 
                     'a: {
                         for i in executed_with_price_info.iter_mut() {
-                            if i.match_id == msg.match_id {
+                            if i.combo_group_id == msg.combo_group_id {
                                 i.c_tag.push((*msg).clone());
                                 break 'a;
                             }
                         }
                         executed_with_price_info.push(CTagWithCorrespondingPTag {
-                            match_id: msg.match_id,
+                            combo_group_id: msg.combo_group_id,
                             c_tag: vec![(*msg).clone()],
                             matched_add_order: vec![add_order],
                             p_tags: Vec::with_capacity(2),
@@ -342,13 +342,13 @@ where
                 }
                 MessageEnum::LegPrice(msg) => 'a: {
                     for i in executed_with_price_info.iter_mut() {
-                        if msg.match_id == i.match_id {
+                        if msg.combo_group_id == i.combo_group_id {
                             i.p_tags.push(*msg);
                             break 'a;
                         }
                     }
                     executed_with_price_info.push(CTagWithCorrespondingPTag {
-                        match_id: msg.match_id,
+                        combo_group_id: msg.combo_group_id,
                         c_tag: vec![],
                         matched_add_order: vec![],
                         p_tags: vec![*msg],
