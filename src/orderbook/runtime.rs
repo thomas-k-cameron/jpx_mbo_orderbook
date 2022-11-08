@@ -59,6 +59,16 @@ pub trait OrderBookRunTimeCallback {
     ) {
     }
 
+    #[allow(unused_variables)]
+    #[inline]
+    fn created(
+        &mut self,
+        order_book_map: &HashMap<i64, OrderBook>,
+        timestamp: &NaiveDateTime,
+        created: Vec<AddOrder>,
+    ) {
+    }
+
     /// called if there was an A, E or D tag message in the message stack
     #[allow(unused_variables)]
     #[inline]
@@ -173,7 +183,8 @@ where
         let mut executed_with_price_info: Vec<CTagWithCorrespondingPTag> = vec![];
         // stacks put order retrieved after `DeleteOrder` message is handled
         let mut deletion = vec![];
-
+        // stacks newly created orders
+        let mut created = HashMap::new();
         let mut modified_order_id_map = {
             let mut add_set = HashSet::new();
             let mut del_set = HashSet::new();
@@ -195,6 +206,9 @@ where
             let mut modified_orders_map = HashMap::new();
             for id in add_set.intersection(&del_set) {
                 modified_orders_map.insert(*id, (None, None, None));
+            }
+            for i in add_set.difference(&del_set) {
+                created.insert(*i, None);
             }
             modified_orders_map
         };
@@ -268,7 +282,9 @@ where
                         modified_order_id_map.entry(id).and_modify(|opts| {
                             opts.0.replace(msg.clone());
                         });
-                    }
+                    } else if let Some(i) = created.get_mut(&id) {
+                        i.replace((*msg).clone());
+                    };
                     order_book_map
                         .get_mut(&msg.order_book_id)
                         .expect(&err_msg(msg.order_book_id, &msg))
@@ -362,6 +378,10 @@ where
 
         if !second_messages.is_empty() {
             callback.second_message(&order_book_map, &timestamp, &second_messages)
+        }
+
+        if created.is_empty() {
+            callback.created(order_book_map, &timestamp, created.into_iter().map(|(_, i)| i.unwrap()).collect());
         }
 
         if !executions.is_empty() {
