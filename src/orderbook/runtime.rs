@@ -163,7 +163,19 @@ where
     let now = SystemTime::now();
     // list of all order book id who had something changes to price levels
     let mut changes = HashSet::new();
+    // stacks put order retrieved after `Executed` message  is handled
+    let mut executions = vec![];
+    // stacks put order retrieved after `ExecutionWithPriceInfo` message is handled
+    let mut executed_with_price_info: Vec<CTagWithCorrespondingPTag> = vec![];
+    // stacks put order retrieved after `DeleteOrder` message is handled
+    let mut deletion = vec![];
+    // stacks newly created orders
+    let mut created = vec![];
     'outer: while let Some((timestamp, stack)) = key_as_timestamp.next() {
+        executions.clear();
+        executed_with_price_info.clear();
+        deletion.clear();
+        created.clear();
         if intrinsics::unlikely(callback.stop()) {
             break 'outer;
         }
@@ -177,14 +189,6 @@ where
         callback.event_start(order_book_map, &timestamp, &stack[..]);
         // pre processing
 
-        // stacks put order retrieved after `Executed` message  is handled
-        let mut executions = vec![];
-        // stacks put order retrieved after `ExecutionWithPriceInfo` message is handled
-        let mut executed_with_price_info: Vec<CTagWithCorrespondingPTag> = vec![];
-        // stacks put order retrieved after `DeleteOrder` message is handled
-        let mut deletion = vec![];
-        // stacks newly created orders
-        let mut created = HashMap::new();
         let mut modified_order_id_map = {
             let mut add_set = HashSet::new();
             let mut del_set = HashSet::new();
@@ -207,9 +211,7 @@ where
             for id in add_set.intersection(&del_set) {
                 modified_orders_map.insert(*id, (None, None, None));
             }
-            for i in add_set.difference(&del_set) {
-                created.insert(*i, None);
-            }
+
             modified_orders_map
         };
 
@@ -278,12 +280,10 @@ where
                 MessageEnum::AddOrder(msg) => {
                     changes.insert(msg.order_book_id);
                     let id = (&*msg).try_into().unwrap();
-                    if modified_order_id_map.contains_key(&id) {
-                        modified_order_id_map.entry(id).and_modify(|opts| {
-                            opts.0.replace(msg.clone());
-                        });
-                    } else if let Some(i) = created.get_mut(&id) {
-                        i.replace((*msg).clone());
+                    if let Some(opts) = modified_order_id_map.get_mut(&id) {
+                        opts.0.replace(msg.clone());
+                    } else {
+                        created.push(*msg);
                     };
                     order_book_map
                         .get_mut(&msg.order_book_id)
@@ -300,11 +300,9 @@ where
 
                     // modify
                     let id = (&*msg).try_into().unwrap();
-                    if modified_order_id_map.contains_key(&id) {
-                        modified_order_id_map.entry(id).and_modify(|opts| {
-                            opts.1.replace(msg);
-                            opts.2.replace(add_order);
-                        });
+                    if let Some(opts) = modified_order_id_map.get_mut(&id) {
+                        opts.1.replace(msg);
+                        opts.2.replace(add_order);
                     } else {
                         // deletion
                         let item = OrderDeletion {
@@ -337,6 +335,7 @@ where
                         for i in executed_with_price_info.iter_mut() {
                             if i.combo_group_id == msg.combo_group_id {
                                 i.c_tag.push((*msg).clone());
+                                i.matched_add_order.push(add_order);
                                 break 'a;
                             }
                         }
@@ -380,20 +379,20 @@ where
             callback.second_message(&order_book_map, &timestamp, &second_messages)
         }
 
-        if created.is_empty() {
-            callback.created(order_book_map, &timestamp, created.into_iter().map(|(_, i)| i.unwrap()).collect());
+        if !created.is_empty() {
+            callback.created(order_book_map, &timestamp, std::mem::take(&mut created));
         }
 
         if !executions.is_empty() {
-            callback.executions(order_book_map, &timestamp, executions);
+            callback.executions(order_book_map, &timestamp, std::mem::take(&mut executions));
         }
 
         if !executed_with_price_info.is_empty() {
-            callback.ctag_execution(order_book_map, &timestamp, executed_with_price_info);
+            callback.ctag_execution(order_book_map, &timestamp, std::mem::take(&mut executed_with_price_info));
         }
 
         if !deletion.is_empty() {
-            callback.deletions(order_book_map, &timestamp, deletion);
+            callback.deletions(order_book_map, &timestamp, std::mem::take(&mut deletion));
         }
 
         if !modified_order_id_map.is_empty() {

@@ -8,6 +8,7 @@ pub struct OrderExecution {
     pub msg: Executed,
 }
 
+
 #[derive(Debug, Clone)]
 pub struct CTagWithCorrespondingPTag {
     pub combo_group_id: i64,
@@ -50,7 +51,7 @@ impl CTagWithCorrespondingPTag {
 }
 
 /// struct for order that were deleted
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct OrderDeletion {
     pub deleted_order: AddOrder,
     pub msg: DeleteOrder,
