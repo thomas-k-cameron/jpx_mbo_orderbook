@@ -75,8 +75,8 @@ impl OrderBook {
     /// fetches a single order from OrderBook
     pub fn order(&self, order_id: &i64, side: &Side) -> Option<&AddOrder> {
         let half = match side {
-            Side::Buy => &self.ask,
-            Side::Sell => &self.bid,
+            Side::Buy => &self.bid,
+            Side::Sell => &self.ask,
         };
         let key = (*order_id, *side);
         if let Some(price) = self.orders.get(&key) {
