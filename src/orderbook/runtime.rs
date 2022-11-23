@@ -264,7 +264,7 @@ where
                 MessageEnum::TickSize(msg) => {
                     order_book_map
                         .get_mut(&msg.order_book_id)
-                        .expect(&err_msg(msg.order_book_id, &msg))
+                        .unwrap_or_else(|| unreachable!("{}",err_msg(msg.order_book_id, &msg)))
                         .append_l(*msg);
                 }
                 MessageEnum::EquilibriumPrice(msg) => {
@@ -287,7 +287,7 @@ where
                     };
                     order_book_map
                         .get_mut(&msg.order_book_id)
-                        .expect(&err_msg(msg.order_book_id, &msg))
+                        .unwrap_or_else(|| unreachable!("{}",(&err_msg(msg.order_book_id, &msg))))
                         .add(*msg);
                 }
                 MessageEnum::DeleteOrder(msg) => {
@@ -295,7 +295,7 @@ where
                     // original add order
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
-                        .expect(&err_msg(msg.order_book_id, &msg))
+                        .unwrap_or_else(|| unreachable!("{}",(&err_msg(msg.order_book_id, &msg))))
                         .delete(&msg);
 
                     // modify
@@ -316,7 +316,7 @@ where
                     changes.insert(msg.order_book_id);
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
-                        .expect(&err_msg(msg.order_book_id, &msg))
+                        .unwrap_or_else(|| unreachable!("{}",(&err_msg(msg.order_book_id, &msg))))
                         .executed(&msg);
                     let item = OrderExecution {
                         matched_order_after_execution: add_order,
@@ -328,7 +328,7 @@ where
                     changes.insert(msg.order_book_id);
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
-                        .expect(&err_msg(msg.order_book_id, &msg))
+                        .unwrap_or_else(|| unreachable!("{}",(&err_msg(msg.order_book_id, &msg))))
                         .c_executed(&msg);
 
                     'a: {
