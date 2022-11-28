@@ -3,7 +3,7 @@ use std::collections::{
     HashSet,
 };
 use std::fmt::Debug;
-use std::intrinsics;
+use std::intrinsics::{self,};
 use std::time::{
     Duration,
     SystemTime,
@@ -65,7 +65,7 @@ pub trait OrderBookRunTimeCallback {
         &mut self,
         order_book_map: &HashMap<i64, OrderBook>,
         timestamp: &NaiveDateTime,
-        created: Vec<AddOrder>,
+        created: Created,
     ) {
     }
 
@@ -161,21 +161,17 @@ where
     let mut message_count = 0;
     let mut key_count = 0;
     let now = SystemTime::now();
-    // list of all order book id who had something changes to price levels
-    let mut changes = HashSet::new();
-    // stacks put order retrieved after `Executed` message  is handled
-    let mut executions = vec![];
-    // stacks put order retrieved after `ExecutionWithPriceInfo` message is handled
-    let mut executed_with_price_info: Vec<CTagWithCorrespondingPTag> = vec![];
-    // stacks put order retrieved after `DeleteOrder` message is handled
-    let mut deletion = vec![];
-    // stacks newly created orders
-    let mut created = vec![];
     'outer: while let Some((timestamp, stack)) = key_as_timestamp.next() {
-        executions.clear();
-        executed_with_price_info.clear();
-        deletion.clear();
-        created.clear();
+        // list of all order book id who had something changes to price levels
+        let mut changes = HashSet::new();
+        // stacks put order retrieved after `Executed` message  is handled
+        let mut executions = vec![];
+        // stacks put order retrieved after `ExecutionWithPriceInfo` message is handled
+        let mut executed_with_price_info: Vec<CTagWithCorrespondingPTag> = vec![];
+        // stacks put order retrieved after `DeleteOrder` message is handled
+        let mut deletion = vec![];
+        // stacks newly created orders
+        let mut created = vec![];
         if intrinsics::unlikely(callback.stop()) {
             break 'outer;
         }
@@ -207,7 +203,7 @@ where
                 }
             }
 
-            let mut modified_orders_map = HashMap::new();
+            let mut modified_orders_map = HashMap::with_capacity(del_set.len());
             for id in add_set.intersection(&del_set) {
                 modified_orders_map.insert(*id, (None, None, None));
             }
@@ -264,7 +260,7 @@ where
                 MessageEnum::TickSize(msg) => {
                     order_book_map
                         .get_mut(&msg.order_book_id)
-                        .unwrap_or_else(|| unreachable!("{}",err_msg(msg.order_book_id, &msg)))
+                        .unwrap_or_else(|| unreachable!("{}", err_msg(msg.order_book_id, &msg)))
                         .append_l(*msg);
                 }
                 MessageEnum::EquilibriumPrice(msg) => {
@@ -287,7 +283,7 @@ where
                     };
                     order_book_map
                         .get_mut(&msg.order_book_id)
-                        .unwrap_or_else(|| unreachable!("{}",(&err_msg(msg.order_book_id, &msg))))
+                        .unwrap_or_else(|| unreachable!("{}", (&err_msg(msg.order_book_id, &msg))))
                         .add(*msg);
                 }
                 MessageEnum::DeleteOrder(msg) => {
@@ -295,7 +291,7 @@ where
                     // original add order
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
-                        .unwrap_or_else(|| unreachable!("{}",(&err_msg(msg.order_book_id, &msg))))
+                        .unwrap_or_else(|| unreachable!("{}", (&err_msg(msg.order_book_id, &msg))))
                         .delete(&msg);
 
                     // modify
@@ -316,7 +312,7 @@ where
                     changes.insert(msg.order_book_id);
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
-                        .unwrap_or_else(|| unreachable!("{}",(&err_msg(msg.order_book_id, &msg))))
+                        .unwrap_or_else(|| unreachable!("{}", (&err_msg(msg.order_book_id, &msg))))
                         .executed(&msg);
                     let item = OrderExecution {
                         matched_order_after_execution: add_order,
@@ -328,7 +324,7 @@ where
                     changes.insert(msg.order_book_id);
                     let add_order = order_book_map
                         .get_mut(&msg.order_book_id)
-                        .unwrap_or_else(|| unreachable!("{}",(&err_msg(msg.order_book_id, &msg))))
+                        .unwrap_or_else(|| unreachable!("{}", (&err_msg(msg.order_book_id, &msg))))
                         .c_executed(&msg);
 
                     'a: {
@@ -380,15 +376,32 @@ where
         }
 
         if !created.is_empty() {
-            callback.created(order_book_map, &timestamp, std::mem::take(&mut created));
+            callback.created(
+                order_book_map,
+                &timestamp,
+                Created {
+                    msgs: created,
+                    is_fas: !(executions.is_empty() && executed_with_price_info.is_empty()),
+                    executed_qty: executions
+                        .iter()
+                        .fold(0, |a, b| a + b.msg.executed_quantity)
+                        + executed_with_price_info
+                            .iter()
+                            .fold(0, |a, b| a + b.executed_quantity()),
+                },
+            );
         }
 
         if !executions.is_empty() {
-            callback.executions(order_book_map, &timestamp, std::mem::take(&mut executions));
+            callback.executions(order_book_map, &timestamp, executions);
         }
 
         if !executed_with_price_info.is_empty() {
-            callback.ctag_execution(order_book_map, &timestamp, std::mem::take(&mut executed_with_price_info));
+            callback.ctag_execution(
+                order_book_map,
+                &timestamp,
+                executed_with_price_info,
+            );
         }
 
         if !deletion.is_empty() {
@@ -398,20 +411,32 @@ where
         if !modified_order_id_map.is_empty() {
             let mut modified_orders = Vec::with_capacity(modified_order_id_map.len());
             for (id, tup) in modified_order_id_map {
-                let (modify_msg, delete_msg, previous_add_order) = tup;
-                let (modify_msg, delete_msg, previous_add_order) = (
-                    modify_msg.unwrap(),
-                    delete_msg.unwrap(),
-                    previous_add_order.unwrap(),
-                );
+                match tup {
+                    (Some(modify_msg), Some(delete_msg), Some(previous_add_order)) => {
+                        // [減数訂正が可能であること](https://faq.sbineotrade.jp/answer/608752eba86ee343fd1372fc)
+                        let modify_type = if modify_msg.quantity == previous_add_order.quantity
+                            && modify_msg.price == previous_add_order.price
+                        {
+                            ModifyType::Neither
+                        } else if modify_msg.price == previous_add_order.price {
+                            ModifyType::ReduceQty
+                        } else if modify_msg.quantity == previous_add_order.quantity {
+                            ModifyType::PriceChange
+                        } else {
+                            ModifyType::Both
+                        };
 
-                let ord = ModifiedOrder {
-                    id,
-                    modify_msg: *modify_msg,
-                    delete_msg: *delete_msg,
-                    previous_add_order,
+                        let ord = ModifiedOrder {
+                            id,
+                            modify_msg: *modify_msg,
+                            delete_msg: *delete_msg,
+                            previous_add_order,
+                            modify_type,
+                        };
+                        modified_orders.push(ord);
+                    }
+                    _ => unreachable!(),
                 };
-                modified_orders.push(ord);
             }
             callback.modified_orders(order_book_map, &timestamp, modified_orders);
         }

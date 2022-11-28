@@ -1,6 +1,16 @@
 use std::collections::HashMap;
 
+use serde::{Serialize, Deserialize};
+
 use crate::datatypes::*;
+
+#[derive(Clone, Default)]
+pub struct Created {
+    pub msgs: Vec<AddOrder>,
+    pub is_fas: bool,
+    pub executed_qty: i64
+}
+
 
 #[derive(Clone)]
 pub struct OrderExecution {
@@ -75,7 +85,7 @@ pub struct OrderDeletion {
     pub msg: DeleteOrder,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ModifiedOrder {
     pub id: UniqueId,
     /// corresponding d tag
@@ -84,4 +94,15 @@ pub struct ModifiedOrder {
     pub modify_msg: AddOrder,
     /// AddOrder struct removed from the orderbook
     pub previous_add_order: AddOrder,
+    pub modify_type: ModifyType
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ModifyType {
+    ReduceQty,
+    PriceChange,
+    /// used when both `ReduceQty` and `PriceChange` is observed
+    Both,
+    /// used when both `ReduceQty` and `PriceChange` is not observed
+    Neither
 }

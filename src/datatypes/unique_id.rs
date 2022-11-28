@@ -49,3 +49,10 @@ impl<'a> TryFrom<&'a DeleteOrder> for UniqueId {
         Ok(UniqueId::from_delete_order(&a))
     }
 }
+
+
+impl ToString for UniqueId {
+    fn to_string(&self) -> String {
+        format!("{}-{}-{:?}", self.order_book_id, self.order_id, self.side)
+    }
+}
