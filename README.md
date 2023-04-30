@@ -9,4 +9,4 @@ It is intended to be used with Osaka Exchange's market by order data (全注文�
 
 # You must be aware that...
 - It is barely optimized
-- 
+- Code is very messy. There are some files that are can not used.
