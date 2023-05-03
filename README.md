@@ -8,7 +8,7 @@ It is intended to be used with Osaka Exchange's market by order data (全注文�
 3. run it with `order_book_runtime`
 
 # You must be aware that...
-- It is barely optimized
+- Optimization is not very good.
 - Code is very messy. There are some files that are can not used.
 
 # I'm looking for something that works with the dataset from X
