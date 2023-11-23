@@ -61,7 +61,7 @@ macro_rules! dclr_message_enum {
             fn try_from(string: String) -> Result<Self, Self::Error> {
                 $(
                     if let Ok(i) = $ident::try_from(string.as_str()) {
-                        return Ok(MessageEnum::$ident(box i))
+                        return Ok(MessageEnum::$ident(Box::new(i))
                     }
                 ) *
                 return Err(string)
