@@ -1,4 +1,4 @@
-#![feature(core_intrinsics, box_syntax)]
+#![feature(core_intrinsics)]
 mod orderbook;
 pub use orderbook::callback_datatype::*;
 pub use orderbook::*;
