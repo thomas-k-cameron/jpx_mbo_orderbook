@@ -73,7 +73,7 @@ macro_rules! dclr_message_enum {
             fn from_str(string: &str) -> Result<Self, Self::Err> {
                 $(
                     if let Ok(i) = $ident::try_from(string) {
-                        return Ok(MessageEnum::$ident(box i))
+                        return Ok(MessageEnum::$ident(Box::new(i)))
                     }
                 ) *
                 return Err(string.to_string())
