@@ -83,6 +83,32 @@ macro_rules! dclr_message_enum {
     };
 }
 
+macro_rules! get_order_book_id {
+    ($($ident:ident),*) => {
+        impl MessageEnum {
+            pub fn order_book_id(&self) -> Option<i64> {
+                match self {
+                    $( MessageEnum::$ident(x) => Some(x.order_book_id), )*
+                    _ => None
+                }
+            }
+        }
+
+    };
+}
+
+get_order_book_id! {
+    DeleteOrder,
+    EquilibriumPrice,
+    Executed,
+    ExecutionWithPriceInfo,
+    LegPrice,
+    ProductInfo,
+    AddOrder,
+    TickSize,
+    TradingStatusInfo
+}
+
 dclr_message_enum!(
     CombinationProduct,
     DeleteOrder,
