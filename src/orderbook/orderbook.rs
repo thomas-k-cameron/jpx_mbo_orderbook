@@ -123,6 +123,28 @@ impl OrderBook {
         stack
     }
 
+    pub fn qty_at_depth_range(&self, depth: usize, side: Side) -> Vec<PriceLevelView> {
+        let mut half_iter = match side {
+            Side::Buy => {
+                Box::new(self.bid.iter().rev())
+                    as Box<dyn Iterator<Item = (&i64, &HashMap<i64, AddOrder>)>>
+            }
+            Side::Sell => Box::new(self.ask.iter()) as Box<dyn Iterator<Item = _>>,
+        };
+
+        let mut stack = vec![];
+        for _idx in 0..depth {
+            if let Some((price, item)) = half_iter.next() {
+                let qty = item.iter().fold(0, |qty, (_, add)| qty + add.quantity);
+                let v = PriceLevelView { qty, price: *price };
+                stack.push(v)
+            } else {
+                break;
+            }
+        }
+        stack
+    }
+
     pub fn best_bid(&self) -> Option<PriceLevelView> {
         if let Some((price, val)) = self.bid.iter().next_back() {
             let v = PriceLevelView {

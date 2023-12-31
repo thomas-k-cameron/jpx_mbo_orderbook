@@ -2,7 +2,6 @@ use std::str::{
     self,
     FromStr,
 };
-
 use chrono::NaiveDateTime;
 
 use crate::OrderBook;

@@ -3,7 +3,6 @@ use std::collections::{
     HashSet,
 };
 use std::fmt::Debug;
-use std::intrinsics::{self,};
 use std::time::{
     Duration,
     SystemTime,
@@ -172,7 +171,7 @@ where
         let mut deletion = vec![];
         // stacks newly created orders
         let mut created = vec![];
-        if intrinsics::unlikely(callback.stop()) {
+        if (callback.stop()) {
             break 'outer;
         }
 
@@ -214,7 +213,7 @@ where
         let mut second_messages = vec![];
 
         for msg in stack.clone() {
-            if intrinsics::unlikely(callback.stop()) {
+            if (callback.stop()) {
                 break 'outer;
             }
 
