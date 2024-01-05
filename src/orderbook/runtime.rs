@@ -347,7 +347,7 @@ where
                     if let Some(book) = order_book_map.get_mut(&msg.combination_order_book_id) {
                         book.push_combination_orderbook(*msg)
                     } else {
-                        unreachable!("{} => {:?}", msg.combination_order_book_id, msg);
+                        //unreachable!("{} => {:?}", msg.combination_order_book_id, msg);
                     };
                 }
                 MessageEnum::LegPrice(msg) => 'a: {
