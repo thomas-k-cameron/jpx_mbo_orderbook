@@ -4,6 +4,7 @@ use std::collections::{
 };
 use std::ops::RangeBounds;
 
+
 use serde::{
     Deserialize,
     Serialize,
@@ -54,6 +55,24 @@ pub struct PriceLevelView {
 }
 
 impl OrderBook {
+    fn ask_iter(&self) -> impl Iterator<Item = &(&i64, &HashMap<i64, AddOrder>)> {
+        self.ask
+            .iter()
+            .filter(|(price, _)| price == i32::MIN as i64)
+    }
+
+    
+    fn dyn_iter(&self, side: &Side) -> impl Iterator<Item = &(&i64, &HashMap<i64, AddOrder>)>{
+        match side {
+            Side::Buy => {
+                self.bid.iter().rev()
+            }
+            Side::Sell => {
+                self.ask_iter()
+            }
+        }
+    }
+
     /// creates new orderbook with ProductInfo
     pub fn new(r: ProductInfo) -> Self {
         Self {
@@ -124,13 +143,7 @@ impl OrderBook {
     }
 
     pub fn qty_at_depth_range(&self, depth: usize, side: Side) -> Vec<PriceLevelView> {
-        let mut half_iter = match side {
-            Side::Buy => {
-                Box::new(self.bid.iter().rev())
-                    as Box<dyn Iterator<Item = (&i64, &HashMap<i64, AddOrder>)>>
-            }
-            Side::Sell => Box::new(self.ask.iter()) as Box<dyn Iterator<Item = _>>,
-        };
+        let mut half_iter = self.dyn_iter(&side);
 
         let mut stack = vec![];
         for _idx in 0..depth {
@@ -158,7 +171,7 @@ impl OrderBook {
     }
 
     pub fn best_ask(&self) -> Option<PriceLevelView> {
-        if let Some((price, val)) = self.ask.iter().next() {
+        if let Some((price, val)) = self.ask_iter().next() {
             let v = PriceLevelView {
                 price: *price,
                 qty: val.iter().fold(0, |qty, (_, add)| qty + add.quantity),
