@@ -4,7 +4,6 @@ use std::collections::{
 };
 use std::ops::RangeBounds;
 
-
 use serde::{
     Deserialize,
     Serialize,
@@ -55,21 +54,19 @@ pub struct PriceLevelView {
 }
 
 impl OrderBook {
-    fn ask_iter(&self) -> impl Iterator<Item = &(&i64, &HashMap<i64, AddOrder>)> {
+    fn ask_iter(&self) -> impl Iterator<Item = (&i64, &HashMap<i64, AddOrder>)> {
         self.ask
             .iter()
-            .filter(|(price, _)| price == i32::MIN as i64)
+            .filter(|(price, _)| price == &&(i32::MIN as i64))
     }
 
-    
-    fn dyn_iter(&self, side: &Side) -> impl Iterator<Item = &(&i64, &HashMap<i64, AddOrder>)>{
+    fn dyn_iter<'a>(
+        &'a self,
+        side: &Side,
+    ) -> Box<dyn Iterator<Item = (&'a i64, &'a HashMap<i64, AddOrder>)> + 'a> {
         match side {
-            Side::Buy => {
-                self.bid.iter().rev()
-            }
-            Side::Sell => {
-                self.ask_iter()
-            }
+            Side::Buy => Box::new(self.bid.iter().rev()) as Box<_>,
+            Side::Sell => Box::new(self.ask_iter()) as Box<_>,
         }
     }
 
